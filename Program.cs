@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using GymCheckIn.Forms;
 
 namespace GymCheckIn
 {
@@ -10,7 +11,14 @@ namespace GymCheckIn
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Forms.MainForm());
+
+            using (var loginForm = new LoginForm())
+            {
+                if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoginResult != null)
+                {
+                    Application.Run(new MainForm(loginForm.LoginResult));
+                }
+            }
         }
     }
 }

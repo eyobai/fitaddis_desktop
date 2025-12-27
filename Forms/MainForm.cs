@@ -19,6 +19,7 @@ namespace GymCheckIn.Forms
         private SyncService _syncService;
         private ExcelExportService _exportService;
         private ApiSettings _apiSettings;
+        private LoginResponse _loginData;
 
         private List<Member> _localMembers = new List<Member>();
         private List<FitAddisMember> _fitAddisMembers = new List<FitAddisMember>();
@@ -28,8 +29,9 @@ namespace GymCheckIn.Forms
         private string _regTemplate = "";
         private string _regTemplate10 = "";
 
-        public MainForm()
+        public MainForm(LoginResponse loginData)
         {
+            _loginData = loginData;
             InitializeComponent();
         }
 
@@ -60,14 +62,12 @@ namespace GymCheckIn.Forms
             ThemeManager.StyleSecondaryButton(btnExportLogs);
             ThemeManager.StyleSecondaryButton(btnExportMembers);
             ThemeManager.StyleDangerButton(btnDeleteMember);
-            ThemeManager.StylePrimaryButton(btnSaveApiSettings);
             ThemeManager.StyleSuccessButton(btnForceSync);
             
             // Style group boxes
             ThemeManager.StyleGroupBox(grpSensor);
             ThemeManager.StyleGroupBox(grpFitAddis);
             ThemeManager.StyleGroupBox(grpEnrollment);
-            ThemeManager.StyleGroupBox(grpApiSettings);
             ThemeManager.StyleGroupBox(grpLog);
             
             // Style data grids
@@ -76,11 +76,6 @@ namespace GymCheckIn.Forms
             
             // Style tab control
             ThemeManager.StyleTabControl(tabControl);
-            
-            // Style text boxes
-            ThemeManager.StyleTextBox(txtApiUrl);
-            ThemeManager.StyleTextBox(txtFitnessCenterId);
-            ThemeManager.StyleTextBox(txtApiKey);
             
             // Style combo box
             ThemeManager.StyleComboBox(cmbFitAddisMembers);
@@ -104,27 +99,20 @@ namespace GymCheckIn.Forms
             
             _db = new DatabaseService(dataFolder);
             
-            // Load API settings
-            string savedBaseUrl = _db.GetSetting("ApiBaseUrl", "https://fitaddis-app-53y6g.ondigitalocean.app");
-            // Fix: ensure base URL doesn't have path segments
-            if (savedBaseUrl.Contains("/fitness-center"))
-            {
-                savedBaseUrl = "https://fitaddis-app-53y6g.ondigitalocean.app";
-                _db.SaveSetting("ApiBaseUrl", savedBaseUrl);
-            }
-            
+            // Use login data for API settings
             _apiSettings = new ApiSettings
             {
-                BaseUrl = savedBaseUrl.TrimEnd('/'),
-                FitnessCenterId = _db.GetSetting("FitnessCenterId", "1"),
-                ApiKey = _db.GetSetting("ApiKey", ""),
+                BaseUrl = "https://fitaddis-app-53y6g.ondigitalocean.app",
+                FitnessCenterId = _loginData.FitnessCenter.Id.ToString(),
+                ApiKey = _loginData.Token,
                 DeviceId = _db.GetSetting("DeviceId", Environment.MachineName),
                 SyncIntervalSeconds = int.Parse(_db.GetSetting("SyncInterval", "30"))
             };
 
-            txtApiUrl.Text = _apiSettings.BaseUrl;
-            txtApiKey.Text = _apiSettings.ApiKey;
-            txtFitnessCenterId.Text = _apiSettings.FitnessCenterId;
+            // Save to database for offline reference
+            _db.SaveSetting("FitnessCenterId", _apiSettings.FitnessCenterId);
+            _db.SaveSetting("ApiKey", _apiSettings.ApiKey);
+            _db.SaveSetting("FitnessCenterName", _loginData.FitnessCenter.Name);
 
             _api = new FitAddisApiService(_apiSettings);
             _api.OnLog += (s, msg) => Log(msg);
@@ -135,6 +123,9 @@ namespace GymCheckIn.Forms
             _syncService.OnConnectionStatusChanged += SyncService_OnConnectionStatusChanged;
 
             _exportService = new ExcelExportService();
+            
+            // Update form title with fitness center name
+            this.Text = $"🏋️ {_loginData.FitnessCenter.Name} - Gym Check-In System";
         }
 
         private void LoadLocalMembers()
@@ -298,24 +289,6 @@ namespace GymCheckIn.Forms
                 btnFetchMembers.Enabled = true;
                 btnFetchMembers.Text = "Fetch Members from Fit Addis";
             }
-        }
-
-        private void btnSaveApiSettings_Click(object sender, EventArgs e)
-        {
-            _apiSettings.BaseUrl = txtApiUrl.Text.Trim();
-            _apiSettings.FitnessCenterId = txtFitnessCenterId.Text.Trim();
-            _apiSettings.ApiKey = txtApiKey.Text.Trim();
-
-            _db.SaveSetting("ApiBaseUrl", _apiSettings.BaseUrl);
-            _db.SaveSetting("FitnessCenterId", _apiSettings.FitnessCenterId);
-            _db.SaveSetting("ApiKey", _apiSettings.ApiKey);
-
-            _api.UpdateBaseUrl(_apiSettings.BaseUrl);
-            _api.UpdateFitnessCenterId(_apiSettings.FitnessCenterId);
-            _api.UpdateApiKey(_apiSettings.ApiKey);
-
-            Log("API settings saved.");
-            MessageBox.Show("Settings saved.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         #endregion

@@ -81,6 +81,40 @@ namespace GymCheckIn.Services
             }
         }
 
+        public static async Task<(LoginResponse response, string error)> LoginAsync(string phoneNumber, string password)
+        {
+            try
+            {
+                using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
+                {
+                    string url = "https://fitaddis-app-53y6g.ondigitalocean.app/login-fitness-center";
+                    var request = new LoginRequest
+                    {
+                        PhoneNumber = phoneNumber,
+                        Password = password
+                    };
+
+                    var json = JsonConvert.SerializeObject(request);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = await client.PostAsync(url, content);
+                    var responseJson = await response.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var loginResponse = JsonConvert.DeserializeObject<LoginResponse>(responseJson);
+                        return (loginResponse, null);
+                    }
+
+                    return (null, $"Login failed: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (null, $"Connection error: {ex.Message}");
+            }
+        }
+
         public bool IsInternetAvailable()
         {
             try

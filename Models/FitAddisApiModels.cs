@@ -101,4 +101,52 @@ namespace GymCheckIn.Models
         public string DeviceId { get; set; } = Environment.MachineName;
         public int SyncIntervalSeconds { get; set; } = 30;
     }
+
+    public class LoginRequest
+    {
+        [JsonProperty("phoneNumber")]
+        public string PhoneNumber { get; set; }
+
+        [JsonProperty("password")]
+        public string Password { get; set; }
+    }
+
+    public class LoginResponse
+    {
+        [JsonProperty("fitnessCenter")]
+        public FitnessCenterInfo FitnessCenter { get; set; }
+
+        [JsonProperty("modules")]
+        public List<object> Modules { get; set; }
+
+        [JsonProperty("token")]
+        public string Token { get; set; }
+    }
+
+    public class FitnessCenterInfo
+    {
+        [JsonProperty("id")]
+        public int Id { get; set; }
+
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
+        [JsonProperty("city")]
+        public string City { get; set; }
+
+        [JsonProperty("specific_location")]
+        public string SpecificLocation { get; set; }
+
+        [JsonProperty("phone_number")]
+        public string PhoneNumber { get; set; }
+
+        [JsonProperty("email")]
+        public string Email { get; set; }
+
+        [JsonProperty("status")]
+        public string Status { get; set; }
+
+        [JsonProperty("membership_expiry_start")]
+        public string MembershipExpiryStart { get; set; }
+    }
 }

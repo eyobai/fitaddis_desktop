@@ -22,7 +22,6 @@ namespace GymCheckIn.Forms
             this.tabEnrollment = new System.Windows.Forms.TabPage();
             this.tabMembers = new System.Windows.Forms.TabPage();
             this.tabLogs = new System.Windows.Forms.TabPage();
-            this.tabSettings = new System.Windows.Forms.TabPage();
 
             // Check-In Tab Controls
             this.pnlCheckInResult = new System.Windows.Forms.Panel();
@@ -56,15 +55,6 @@ namespace GymCheckIn.Forms
             this.btnExportLogs = new System.Windows.Forms.Button();
             this.lblLogCount = new System.Windows.Forms.Label();
 
-            // Settings Tab Controls
-            this.grpApiSettings = new System.Windows.Forms.GroupBox();
-            this.lblApiUrl = new System.Windows.Forms.Label();
-            this.txtApiUrl = new System.Windows.Forms.TextBox();
-            this.lblFitnessCenterId = new System.Windows.Forms.Label();
-            this.txtFitnessCenterId = new System.Windows.Forms.TextBox();
-            this.lblApiKey = new System.Windows.Forms.Label();
-            this.txtApiKey = new System.Windows.Forms.TextBox();
-            this.btnSaveApiSettings = new System.Windows.Forms.Button();
 
             // Status Bar Controls
             this.pnlStatus = new System.Windows.Forms.Panel();
@@ -92,7 +82,6 @@ namespace GymCheckIn.Forms
             this.tabControl.Controls.Add(this.tabEnrollment);
             this.tabControl.Controls.Add(this.tabMembers);
             this.tabControl.Controls.Add(this.tabLogs);
-            this.tabControl.Controls.Add(this.tabSettings);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
@@ -378,78 +367,6 @@ namespace GymCheckIn.Forms
             this.lblLogCount.ForeColor = System.Drawing.Color.FromArgb(41, 128, 185);
 
             // 
-            // tabSettings
-            // 
-            this.tabSettings.Text = "Settings";
-            this.tabSettings.Padding = new System.Windows.Forms.Padding(20);
-            this.tabSettings.Controls.Add(this.grpApiSettings);
-
-            // 
-            // grpApiSettings
-            // 
-            this.grpApiSettings.Text = "  ⚙️ Fit Addis API Settings  ";
-            this.grpApiSettings.Location = new System.Drawing.Point(20, 20);
-            this.grpApiSettings.Size = new System.Drawing.Size(550, 280);
-            this.grpApiSettings.Controls.Add(this.lblApiUrl);
-            this.grpApiSettings.Controls.Add(this.txtApiUrl);
-            this.grpApiSettings.Controls.Add(this.lblFitnessCenterId);
-            this.grpApiSettings.Controls.Add(this.txtFitnessCenterId);
-            this.grpApiSettings.Controls.Add(this.lblApiKey);
-            this.grpApiSettings.Controls.Add(this.txtApiKey);
-            this.grpApiSettings.Controls.Add(this.btnSaveApiSettings);
-
-            // 
-            // lblApiUrl
-            // 
-            this.lblApiUrl.Text = "API Base URL:";
-            this.lblApiUrl.Location = new System.Drawing.Point(20, 45);
-            this.lblApiUrl.Size = new System.Drawing.Size(130, 30);
-            this.lblApiUrl.Font = new System.Drawing.Font("Segoe UI", 10F);
-
-            // 
-            // txtApiUrl
-            // 
-            this.txtApiUrl.Location = new System.Drawing.Point(160, 42);
-            this.txtApiUrl.Size = new System.Drawing.Size(370, 32);
-
-            // 
-            // lblFitnessCenterId
-            // 
-            this.lblFitnessCenterId.Text = "Fitness Center ID:";
-            this.lblFitnessCenterId.Location = new System.Drawing.Point(20, 95);
-            this.lblFitnessCenterId.Size = new System.Drawing.Size(130, 30);
-            this.lblFitnessCenterId.Font = new System.Drawing.Font("Segoe UI", 10F);
-
-            // 
-            // txtFitnessCenterId
-            // 
-            this.txtFitnessCenterId.Location = new System.Drawing.Point(160, 92);
-            this.txtFitnessCenterId.Size = new System.Drawing.Size(120, 32);
-
-            // 
-            // lblApiKey
-            // 
-            this.lblApiKey.Text = "API Key:";
-            this.lblApiKey.Location = new System.Drawing.Point(20, 145);
-            this.lblApiKey.Size = new System.Drawing.Size(130, 30);
-            this.lblApiKey.Font = new System.Drawing.Font("Segoe UI", 10F);
-
-            // 
-            // txtApiKey
-            // 
-            this.txtApiKey.Location = new System.Drawing.Point(160, 142);
-            this.txtApiKey.Size = new System.Drawing.Size(370, 32);
-            this.txtApiKey.PasswordChar = '*';
-
-            // 
-            // btnSaveApiSettings
-            // 
-            this.btnSaveApiSettings.Text = "💾  Save Settings";
-            this.btnSaveApiSettings.Location = new System.Drawing.Point(160, 200);
-            this.btnSaveApiSettings.Size = new System.Drawing.Size(180, 50);
-            this.btnSaveApiSettings.Click += new System.EventHandler(this.btnSaveApiSettings_Click);
-
-            // 
             // pnlStatus
             // 
             this.pnlStatus.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -553,7 +470,6 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.TabPage tabEnrollment;
         private System.Windows.Forms.TabPage tabMembers;
         private System.Windows.Forms.TabPage tabLogs;
-        private System.Windows.Forms.TabPage tabSettings;
 
         private System.Windows.Forms.Panel pnlCheckInResult;
         private System.Windows.Forms.Label lblCheckInTitle;
@@ -585,14 +501,6 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.Button btnExportLogs;
         private System.Windows.Forms.Label lblLogCount;
 
-        private System.Windows.Forms.GroupBox grpApiSettings;
-        private System.Windows.Forms.Label lblApiUrl;
-        private System.Windows.Forms.TextBox txtApiUrl;
-        private System.Windows.Forms.Label lblFitnessCenterId;
-        private System.Windows.Forms.TextBox txtFitnessCenterId;
-        private System.Windows.Forms.Label lblApiKey;
-        private System.Windows.Forms.TextBox txtApiKey;
-        private System.Windows.Forms.Button btnSaveApiSettings;
 
         private System.Windows.Forms.Panel pnlStatus;
         private System.Windows.Forms.Label lblConnectionStatus;
