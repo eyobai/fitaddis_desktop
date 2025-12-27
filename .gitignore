@@ -1,0 +1,25 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# NuGet
+packages/
+*.nupkg
+
+# Installer output
+Installer/Output/
+
+# Database files
+*.db
+*.db-journal
+
+# OS files
+Thumbs.db
+.DS_Store

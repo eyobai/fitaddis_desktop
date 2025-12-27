@@ -1,0 +1,104 @@
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+
+namespace GymCheckIn.Models
+{
+    public class FitAddisMember
+    {
+        [JsonProperty("member_id")]
+        public int MemberId { get; set; }
+
+        [JsonProperty("first_name")]
+        public string FirstName { get; set; }
+
+        [JsonProperty("last_name")]
+        public string LastName { get; set; }
+
+        [JsonProperty("phone_number")]
+        public string PhoneNumber { get; set; }
+
+        [JsonProperty("email")]
+        public string Email { get; set; }
+
+        [JsonProperty("check_in_code")]
+        public string CheckInCode { get; set; }
+
+        [JsonProperty("membership_name")]
+        public string MembershipName { get; set; }
+
+        [JsonProperty("membership_expiry_date")]
+        public DateTime? MembershipExpiryDate { get; set; }
+
+        [JsonProperty("latest_billing_status")]
+        public string LatestBillingStatus { get; set; }
+
+        [JsonProperty("total_check_ins")]
+        public string TotalCheckIns { get; set; }
+
+        [JsonProperty("last_check_in_time")]
+        public DateTime? LastCheckInTime { get; set; }
+
+        public string FullName => $"{FirstName} {LastName}".Trim();
+        
+        public string MemberCode => CheckInCode;
+    }
+
+    public class FitAddisMembersResponse
+    {
+        [JsonProperty("members")]
+        public List<FitAddisMember> Members { get; set; }
+
+        [JsonProperty("pagination")]
+        public PaginationInfo Pagination { get; set; }
+    }
+
+    public class PaginationInfo
+    {
+        [JsonProperty("page")]
+        public int Page { get; set; }
+
+        [JsonProperty("limit")]
+        public int Limit { get; set; }
+
+        [JsonProperty("totalMembers")]
+        public int TotalMembers { get; set; }
+
+        [JsonProperty("totalPages")]
+        public int TotalPages { get; set; }
+
+        [JsonProperty("hasNextPage")]
+        public bool HasNextPage { get; set; }
+
+        [JsonProperty("hasPrevPage")]
+        public bool HasPrevPage { get; set; }
+    }
+
+    public class CheckInRequest
+    {
+        [JsonProperty("check_in_code")]
+        public string CheckInCode { get; set; }
+
+        [JsonProperty("check_in_time")]
+        public DateTime CheckInTime { get; set; }
+
+        [JsonProperty("device_id")]
+        public string DeviceId { get; set; }
+    }
+
+    public class CheckInResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string CheckInId { get; set; }
+    }
+
+    public class ApiSettings
+    {
+        public string BaseUrl { get; set; } = "https://fitaddis-app-53y6g.ondigitalocean.app";
+        public string FitnessCenterId { get; set; } = "1";
+        public string ApiKey { get; set; } = "";
+        public string DeviceId { get; set; } = Environment.MachineName;
+        public int SyncIntervalSeconds { get; set; } = 30;
+    }
+}
