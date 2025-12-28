@@ -69,6 +69,12 @@ namespace GymCheckIn.Forms
             ThemeManager.StyleGroupBox(grpFitAddis);
             ThemeManager.StyleGroupBox(grpEnrollment);
             ThemeManager.StyleGroupBox(grpLog);
+            ThemeManager.StyleGroupBox(grpManualCheckIn);
+            
+            // Style manual check-in controls
+            ThemeManager.StylePrimaryButton(btnLoadMembers);
+            ThemeManager.StyleSuccessButton(btnManualCheckIn);
+            ThemeManager.StyleComboBox(cmbManualCheckInMembers);
             
             // Style data grids
             ThemeManager.StyleDataGridView(dgvMembers);
@@ -288,6 +294,134 @@ namespace GymCheckIn.Forms
             {
                 btnFetchMembers.Enabled = true;
                 btnFetchMembers.Text = "Fetch Members from Fit Addis";
+            }
+        }
+
+        #endregion
+
+        #region Manual Check-In
+
+        private async void btnLoadMembers_Click(object sender, EventArgs e)
+        {
+            btnLoadMembers.Enabled = false;
+            btnLoadMembers.Text = "Loading...";
+
+            try
+            {
+                _fitAddisMembers = await _api.GetMembersAsync();
+
+                if (_fitAddisMembers.Count > 0)
+                {
+                    cmbManualCheckInMembers.DataSource = null;
+                    cmbManualCheckInMembers.DisplayMember = "Display";
+                    cmbManualCheckInMembers.ValueMember = "CheckInCode";
+                    cmbManualCheckInMembers.DataSource = _fitAddisMembers.Select(m => new
+                    {
+                        m.CheckInCode,
+                        Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName})"
+                    }).ToList();
+
+                    Log($"Loaded {_fitAddisMembers.Count} members for manual check-in");
+                }
+                else
+                {
+                    MessageBox.Show("No members found or API connection failed.", "Info",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error loading members: {ex.Message}");
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnLoadMembers.Enabled = true;
+                btnLoadMembers.Text = "Load Members";
+            }
+        }
+
+        private async void btnManualCheckIn_Click(object sender, EventArgs e)
+        {
+            if (cmbManualCheckInMembers.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a member to check in.", "Validation",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            dynamic selected = cmbManualCheckInMembers.SelectedItem;
+            string checkInCode = selected.CheckInCode;
+
+            var member = _fitAddisMembers.FirstOrDefault(m => m.CheckInCode == checkInCode);
+            if (member == null)
+            {
+                MessageBox.Show("Member not found.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Check membership expiry
+            bool isExpired = member.MembershipExpiryDate.HasValue && member.MembershipExpiryDate.Value < DateTime.Now;
+            int daysRemaining = member.MembershipExpiryDate.HasValue
+                ? (int)(member.MembershipExpiryDate.Value - DateTime.Now).TotalDays
+                : 0;
+
+            string status;
+            Color color;
+
+            if (isExpired)
+            {
+                status = "EXPIRED";
+                color = Color.Red;
+                ShowCheckInResult("MEMBERSHIP EXPIRED",
+                    $"{member.FullName}\nExpired: {member.MembershipExpiryDate:dd/MM/yyyy}", color);
+                Log($"Check-in DENIED: {member.FullName} - Membership expired");
+            }
+            else
+            {
+                status = "OK";
+                color = Color.Green;
+                ShowCheckInResult("CHECK-IN SUCCESS",
+                    $"{member.FullName}\n{(daysRemaining > 0 ? $"{daysRemaining} days remaining" : member.MembershipName)}", color);
+                Log($"Check-in OK: {member.FullName}");
+            }
+
+            // Save check-in record locally
+            var checkIn = new CheckInRecord
+            {
+                FitAddisMemberCode = member.CheckInCode,
+                MemberName = member.FullName,
+                CheckInTime = DateTime.Now,
+                Status = status,
+                IsSynced = false
+            };
+
+            _db.SaveCheckIn(checkIn);
+            UpdateUI();
+
+            Log($"Check-in saved locally (ID: {checkIn.Id}). Will sync when online.");
+
+            // Send to API immediately
+            try
+            {
+                var request = new CheckInRequest
+                {
+                    CheckInCode = member.CheckInCode,
+                    CheckInTime = DateTime.Now
+                };
+
+                var response = await _api.SendCheckInAsync(request);
+                if (response.Success)
+                {
+                    _db.MarkCheckInSynced(checkIn.Id, true, null);
+                    Log($"Check-in synced to server for {member.FullName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to sync check-in: {ex.Message}");
             }
         }
 

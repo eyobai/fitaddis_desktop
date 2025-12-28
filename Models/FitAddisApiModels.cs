@@ -76,14 +76,14 @@ namespace GymCheckIn.Models
 
     public class CheckInRequest
     {
-        [JsonProperty("check_in_code")]
+        [JsonProperty("checkInCode")]
         public string CheckInCode { get; set; }
 
-        [JsonProperty("check_in_time")]
-        public DateTime CheckInTime { get; set; }
+        [JsonProperty("fitnessCenterId")]
+        public int FitnessCenterId { get; set; }
 
-        [JsonProperty("device_id")]
-        public string DeviceId { get; set; }
+        [JsonProperty("checkInTime")]
+        public DateTime? CheckInTime { get; set; }
     }
 
     public class CheckInResponse

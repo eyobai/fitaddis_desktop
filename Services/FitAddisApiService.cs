@@ -192,27 +192,43 @@ namespace GymCheckIn.Services
         {
             try
             {
-                string url = $"{_settings.BaseUrl}/fitness-center/{_settings.FitnessCenterId}/check-in";
+                // Set fitnessCenterId from settings
+                request.FitnessCenterId = int.Parse(_settings.FitnessCenterId);
+                
+                string url = $"{_settings.BaseUrl}/record-check-in";
                 var json = JsonConvert.SerializeObject(request);
+                
+                Log($"Sending check-in: {json}");
+                
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 
                 var response = await _httpClient.PostAsync(url, content);
                 var responseJson = await response.Content.ReadAsStringAsync();
+                
+                Log($"Response: {response.StatusCode} - {responseJson}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = JsonConvert.DeserializeObject<CheckInResponse>(responseJson);
-                    return result ?? new CheckInResponse { Success = true };
+                    // API returns checkIn object on success, not a Success boolean
+                    return new CheckInResponse { Success = true, Message = "Check-in recorded" };
+                }
+
+                // Parse error response
+                string errorMessage = $"API Error: {response.StatusCode}";
+                if (!string.IsNullOrEmpty(responseJson))
+                {
+                    errorMessage += $" - {responseJson}";
                 }
 
                 return new CheckInResponse
                 {
                     Success = false,
-                    Message = $"API Error: {response.StatusCode} - {responseJson}"
+                    Message = errorMessage
                 };
             }
             catch (Exception ex)
             {
+                Log($"Check-in exception: {ex.Message}");
                 return new CheckInResponse
                 {
                     Success = false,
@@ -231,8 +247,7 @@ namespace GymCheckIn.Services
                 var request = new CheckInRequest
                 {
                     CheckInCode = checkIn.FitAddisMemberCode,
-                    CheckInTime = checkIn.CheckInTime,
-                    DeviceId = _settings.DeviceId
+                    CheckInTime = checkIn.CheckInTime
                 };
 
                 var response = await SendCheckInAsync(request);

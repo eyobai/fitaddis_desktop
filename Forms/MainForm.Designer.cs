@@ -56,6 +56,12 @@ namespace GymCheckIn.Forms
             this.lblLogCount = new System.Windows.Forms.Label();
 
 
+            // Manual Check-In Controls
+            this.grpManualCheckIn = new System.Windows.Forms.GroupBox();
+            this.cmbManualCheckInMembers = new System.Windows.Forms.ComboBox();
+            this.btnManualCheckIn = new System.Windows.Forms.Button();
+            this.btnLoadMembers = new System.Windows.Forms.Button();
+
             // Status Bar Controls
             this.pnlStatus = new System.Windows.Forms.Panel();
             this.lblConnectionStatus = new System.Windows.Forms.Label();
@@ -99,6 +105,7 @@ namespace GymCheckIn.Forms
             this.tabCheckIn.Controls.Add(this.pnlCheckInResult);
             this.tabCheckIn.Controls.Add(this.picFingerprint);
             this.tabCheckIn.Controls.Add(this.grpSensor);
+            this.tabCheckIn.Controls.Add(this.grpManualCheckIn);
 
             // 
             // pnlCheckInResult
@@ -171,6 +178,43 @@ namespace GymCheckIn.Forms
             this.lblSensorStatus.Text = "● DISCONNECTED";
             this.lblSensorStatus.ForeColor = System.Drawing.Color.FromArgb(231, 76, 60);
             this.lblSensorStatus.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+
+            // 
+            // grpManualCheckIn
+            // 
+            this.grpManualCheckIn.Text = "  Manual Check-In (Testing)  ";
+            this.grpManualCheckIn.Location = new System.Drawing.Point(20, 230);
+            this.grpManualCheckIn.Size = new System.Drawing.Size(850, 120);
+            this.grpManualCheckIn.Controls.Add(this.btnLoadMembers);
+            this.grpManualCheckIn.Controls.Add(this.cmbManualCheckInMembers);
+            this.grpManualCheckIn.Controls.Add(this.btnManualCheckIn);
+
+            // 
+            // btnLoadMembers
+            // 
+            this.btnLoadMembers.Text = "Load Members";
+            this.btnLoadMembers.Location = new System.Drawing.Point(15, 35);
+            this.btnLoadMembers.Size = new System.Drawing.Size(130, 40);
+            this.btnLoadMembers.Click += new System.EventHandler(this.btnLoadMembers_Click);
+
+            // 
+            // cmbManualCheckInMembers
+            // 
+            this.cmbManualCheckInMembers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbManualCheckInMembers.Location = new System.Drawing.Point(160, 40);
+            this.cmbManualCheckInMembers.Size = new System.Drawing.Size(480, 35);
+
+            // 
+            // btnManualCheckIn
+            // 
+            this.btnManualCheckIn.Text = "✓  Check In";
+            this.btnManualCheckIn.Location = new System.Drawing.Point(660, 35);
+            this.btnManualCheckIn.Size = new System.Drawing.Size(170, 45);
+            this.btnManualCheckIn.BackColor = System.Drawing.Color.FromArgb(39, 174, 96);
+            this.btnManualCheckIn.ForeColor = System.Drawing.Color.White;
+            this.btnManualCheckIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.btnManualCheckIn.Click += new System.EventHandler(this.btnManualCheckIn_Click);
             this.lblSensorStatus.Location = new System.Drawing.Point(15, 150);
             this.lblSensorStatus.Size = new System.Drawing.Size(155, 35);
             this.lblSensorStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -493,7 +537,6 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.Label lblMemberCount;
         private System.Windows.Forms.Button btnDeleteMember;
         private System.Windows.Forms.Button btnExportMembers;
-
         private System.Windows.Forms.DataGridView dgvLogs;
         private System.Windows.Forms.DateTimePicker dtpLogFrom;
         private System.Windows.Forms.DateTimePicker dtpLogTo;
@@ -509,6 +552,11 @@ namespace GymCheckIn.Forms
 
         private System.Windows.Forms.GroupBox grpLog;
         private System.Windows.Forms.TextBox txtLog;
+
+        private System.Windows.Forms.GroupBox grpManualCheckIn;
+        private System.Windows.Forms.ComboBox cmbManualCheckInMembers;
+        private System.Windows.Forms.Button btnManualCheckIn;
+        private System.Windows.Forms.Button btnLoadMembers;
 
         private AxZKFPEngXControl.AxZKFPEngX axZKFPEngX1;
     }
