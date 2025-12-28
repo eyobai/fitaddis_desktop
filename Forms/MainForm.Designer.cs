@@ -37,6 +37,7 @@ namespace GymCheckIn.Forms
             this.grpFitAddis = new System.Windows.Forms.GroupBox();
             this.btnFetchMembers = new System.Windows.Forms.Button();
             this.cmbFitAddisMembers = new System.Windows.Forms.ComboBox();
+            this.lblMemberListInfo = new System.Windows.Forms.Label();
             this.grpEnrollment = new System.Windows.Forms.GroupBox();
             this.btnEnrollFingerprint = new System.Windows.Forms.Button();
             this.lblEnrollStatus = new System.Windows.Forms.Label();
@@ -112,7 +113,7 @@ namespace GymCheckIn.Forms
             // 
             this.pnlCheckInResult.BackColor = System.Drawing.Color.FromArgb(41, 128, 185);
             this.pnlCheckInResult.Location = new System.Drawing.Point(220, 20);
-            this.pnlCheckInResult.Size = new System.Drawing.Size(650, 250);
+            this.pnlCheckInResult.Size = new System.Drawing.Size(520, 250);
             this.pnlCheckInResult.Controls.Add(this.lblCheckInTitle);
             this.pnlCheckInResult.Controls.Add(this.lblCheckInDetails);
 
@@ -122,7 +123,7 @@ namespace GymCheckIn.Forms
             this.lblCheckInTitle.Font = new System.Drawing.Font("Segoe UI", 42F, System.Drawing.FontStyle.Bold);
             this.lblCheckInTitle.ForeColor = System.Drawing.Color.White;
             this.lblCheckInTitle.Location = new System.Drawing.Point(10, 40);
-            this.lblCheckInTitle.Size = new System.Drawing.Size(630, 80);
+            this.lblCheckInTitle.Size = new System.Drawing.Size(500, 80);
             this.lblCheckInTitle.Text = "READY";
             this.lblCheckInTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
@@ -132,7 +133,7 @@ namespace GymCheckIn.Forms
             this.lblCheckInDetails.Font = new System.Drawing.Font("Segoe UI", 16F);
             this.lblCheckInDetails.ForeColor = System.Drawing.Color.White;
             this.lblCheckInDetails.Location = new System.Drawing.Point(10, 130);
-            this.lblCheckInDetails.Size = new System.Drawing.Size(630, 100);
+            this.lblCheckInDetails.Size = new System.Drawing.Size(500, 100);
             this.lblCheckInDetails.Text = "Scan fingerprint to check in";
             this.lblCheckInDetails.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
@@ -150,7 +151,8 @@ namespace GymCheckIn.Forms
             // 
             this.grpSensor.Text = "  Fingerprint Sensor  ";
             this.grpSensor.Location = new System.Drawing.Point(20, 20);
-            this.grpSensor.Size = new System.Drawing.Size(185, 200);
+            this.grpSensor.Size = new System.Drawing.Size(185, 190);
+            this.grpSensor.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.grpSensor.Controls.Add(this.btnConnect);
             this.grpSensor.Controls.Add(this.btnDisconnect);
             this.grpSensor.Controls.Add(this.lblSensorStatus);
@@ -176,15 +178,19 @@ namespace GymCheckIn.Forms
             // lblSensorStatus
             // 
             this.lblSensorStatus.Text = "● DISCONNECTED";
+            this.lblSensorStatus.Location = new System.Drawing.Point(15, 145);
+            this.lblSensorStatus.Size = new System.Drawing.Size(155, 30);
             this.lblSensorStatus.ForeColor = System.Drawing.Color.FromArgb(231, 76, 60);
-            this.lblSensorStatus.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblSensorStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.lblSensorStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
             // 
             // grpManualCheckIn
             // 
-            this.grpManualCheckIn.Text = "  Manual Check-In (Testing)  ";
-            this.grpManualCheckIn.Location = new System.Drawing.Point(20, 230);
-            this.grpManualCheckIn.Size = new System.Drawing.Size(850, 120);
+            this.grpManualCheckIn.Text = "  Manual Check-In  ";
+            this.grpManualCheckIn.Location = new System.Drawing.Point(755, 20);
+            this.grpManualCheckIn.Size = new System.Drawing.Size(222, 180);
+            this.grpManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.grpManualCheckIn.Controls.Add(this.btnLoadMembers);
             this.grpManualCheckIn.Controls.Add(this.cmbManualCheckInMembers);
             this.grpManualCheckIn.Controls.Add(this.btnManualCheckIn);
@@ -192,32 +198,31 @@ namespace GymCheckIn.Forms
             // 
             // btnLoadMembers
             // 
-            this.btnLoadMembers.Text = "Load Members";
-            this.btnLoadMembers.Location = new System.Drawing.Point(15, 35);
-            this.btnLoadMembers.Size = new System.Drawing.Size(130, 40);
+            this.btnLoadMembers.Text = "🔄 Load Members";
+            this.btnLoadMembers.Location = new System.Drawing.Point(15, 30);
+            this.btnLoadMembers.Size = new System.Drawing.Size(190, 35);
+            this.btnLoadMembers.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnLoadMembers.Click += new System.EventHandler(this.btnLoadMembers_Click);
 
             // 
             // cmbManualCheckInMembers
             // 
             this.cmbManualCheckInMembers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbManualCheckInMembers.Location = new System.Drawing.Point(160, 40);
-            this.cmbManualCheckInMembers.Size = new System.Drawing.Size(480, 35);
+            this.cmbManualCheckInMembers.Location = new System.Drawing.Point(15, 75);
+            this.cmbManualCheckInMembers.Size = new System.Drawing.Size(190, 30);
+            this.cmbManualCheckInMembers.Font = new System.Drawing.Font("Segoe UI", 9F);
 
             // 
             // btnManualCheckIn
             // 
-            this.btnManualCheckIn.Text = "✓  Check In";
-            this.btnManualCheckIn.Location = new System.Drawing.Point(660, 35);
-            this.btnManualCheckIn.Size = new System.Drawing.Size(170, 45);
+            this.btnManualCheckIn.Text = "✓ Check In";
+            this.btnManualCheckIn.Location = new System.Drawing.Point(15, 120);
+            this.btnManualCheckIn.Size = new System.Drawing.Size(190, 45);
             this.btnManualCheckIn.BackColor = System.Drawing.Color.FromArgb(39, 174, 96);
             this.btnManualCheckIn.ForeColor = System.Drawing.Color.White;
             this.btnManualCheckIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.btnManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnManualCheckIn.Click += new System.EventHandler(this.btnManualCheckIn_Click);
-            this.lblSensorStatus.Location = new System.Drawing.Point(15, 150);
-            this.lblSensorStatus.Size = new System.Drawing.Size(155, 35);
-            this.lblSensorStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
             // 
             // tabEnrollment
@@ -232,30 +237,43 @@ namespace GymCheckIn.Forms
             // 
             this.grpFitAddis.Text = "  Fit Addis Members  ";
             this.grpFitAddis.Location = new System.Drawing.Point(20, 20);
-            this.grpFitAddis.Size = new System.Drawing.Size(520, 140);
+            this.grpFitAddis.Size = new System.Drawing.Size(520, 150);
             this.grpFitAddis.Controls.Add(this.btnFetchMembers);
             this.grpFitAddis.Controls.Add(this.cmbFitAddisMembers);
+            this.grpFitAddis.Controls.Add(this.lblMemberListInfo);
 
             // 
             // btnFetchMembers
             // 
-            this.btnFetchMembers.Text = "🔄  Fetch Members from Fit Addis";
-            this.btnFetchMembers.Location = new System.Drawing.Point(20, 35);
-            this.btnFetchMembers.Size = new System.Drawing.Size(480, 45);
+            this.btnFetchMembers.Text = "🔄  Refresh Members List";
+            this.btnFetchMembers.Location = new System.Drawing.Point(20, 30);
+            this.btnFetchMembers.Size = new System.Drawing.Size(200, 40);
+            this.btnFetchMembers.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnFetchMembers.Click += new System.EventHandler(this.btnFetchMembers_Click);
+
+            // 
+            // lblMemberListInfo
+            // 
+            this.lblMemberListInfo.Text = "Select member to enroll:";
+            this.lblMemberListInfo.Location = new System.Drawing.Point(20, 80);
+            this.lblMemberListInfo.Size = new System.Drawing.Size(200, 25);
+            this.lblMemberListInfo.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.lblMemberListInfo.ForeColor = System.Drawing.Color.FromArgb(108, 117, 125);
 
             // 
             // cmbFitAddisMembers
             // 
             this.cmbFitAddisMembers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbFitAddisMembers.Location = new System.Drawing.Point(20, 90);
+            this.cmbFitAddisMembers.Location = new System.Drawing.Point(20, 105);
             this.cmbFitAddisMembers.Size = new System.Drawing.Size(480, 35);
+            this.cmbFitAddisMembers.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.cmbFitAddisMembers.ItemHeight = 20;
 
             // 
             // grpEnrollment
             // 
             this.grpEnrollment.Text = "  Fingerprint Enrollment  ";
-            this.grpEnrollment.Location = new System.Drawing.Point(20, 175);
+            this.grpEnrollment.Location = new System.Drawing.Point(20, 180);
             this.grpEnrollment.Size = new System.Drawing.Size(520, 280);
             this.grpEnrollment.Enabled = false;
             this.grpEnrollment.Controls.Add(this.btnEnrollFingerprint);
@@ -528,6 +546,7 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.GroupBox grpFitAddis;
         private System.Windows.Forms.Button btnFetchMembers;
         private System.Windows.Forms.ComboBox cmbFitAddisMembers;
+        private System.Windows.Forms.Label lblMemberListInfo;
 
         private System.Windows.Forms.GroupBox grpEnrollment;
         private System.Windows.Forms.Button btnEnrollFingerprint;

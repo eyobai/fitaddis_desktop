@@ -149,8 +149,11 @@ namespace GymCheckIn.Forms
                 MemberCode = m.FitAddisMemberCode,
                 m.Name,
                 m.Phone,
+                DaysToExpire = m.MembershipExpiryDate.HasValue 
+                    ? (int)(m.MembershipExpiryDate.Value - DateTime.Now).TotalDays 
+                    : 0,
                 Expiry = m.MembershipExpiryDate?.ToString("dd/MM/yyyy") ?? "N/A",
-                Status = m.IsExpired ? "EXPIRED" : (m.DaysRemaining > 0 ? $"{m.DaysRemaining} days" : "N/A"),
+                Status = m.IsExpired ? "EXPIRED" : "ACTIVE",
                 Enrolled = m.IsEnrolled ? "Yes" : "No"
             }).ToList();
 
