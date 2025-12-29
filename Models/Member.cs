@@ -9,6 +9,7 @@ namespace GymCheckIn.Models
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
+        public string MembershipPlan { get; set; }
         public DateTime? MembershipExpiryDate { get; set; }
         public string FingerprintTemplate { get; set; }
         public string FingerprintTemplate10 { get; set; }

@@ -35,6 +35,7 @@ namespace GymCheckIn.Services
                         Name TEXT,
                         Phone TEXT,
                         Email TEXT,
+                        MembershipPlan TEXT,
                         MembershipExpiryDate TEXT,
                         FingerprintTemplate TEXT,
                         FingerprintTemplate10 TEXT,
@@ -68,6 +69,14 @@ namespace GymCheckIn.Services
 
                 using (var cmd = new SQLiteCommand(createSettingsTable, conn))
                     cmd.ExecuteNonQuery();
+
+                // Migration: Add MembershipPlan column if it doesn't exist
+                try
+                {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Members ADD COLUMN MembershipPlan TEXT", conn))
+                        cmd.ExecuteNonQuery();
+                }
+                catch { /* Column already exists */ }
             }
         }
 
@@ -156,10 +165,10 @@ namespace GymCheckIn.Services
                 conn.Open();
                 string sql = @"
                     INSERT OR REPLACE INTO Members 
-                    (Id, FitAddisMemberCode, Name, Phone, Email, MembershipExpiryDate, 
+                    (Id, FitAddisMemberCode, Name, Phone, Email, MembershipPlan, MembershipExpiryDate, 
                      FingerprintTemplate, FingerprintTemplate10, FingerprintId, EnrolledDate)
                     VALUES 
-                    (@Id, @Code, @Name, @Phone, @Email, @Expiry, 
+                    (@Id, @Code, @Name, @Phone, @Email, @Plan, @Expiry, 
                      @Template, @Template10, @FingerprintId, @EnrolledDate)";
 
                 using (var cmd = new SQLiteCommand(sql, conn))
@@ -169,6 +178,7 @@ namespace GymCheckIn.Services
                     cmd.Parameters.AddWithValue("@Name", member.Name ?? "");
                     cmd.Parameters.AddWithValue("@Phone", member.Phone ?? "");
                     cmd.Parameters.AddWithValue("@Email", member.Email ?? "");
+                    cmd.Parameters.AddWithValue("@Plan", member.MembershipPlan ?? "");
                     cmd.Parameters.AddWithValue("@Expiry", member.MembershipExpiryDate?.ToString("o") ?? "");
                     cmd.Parameters.AddWithValue("@Template", member.FingerprintTemplate ?? "");
                     cmd.Parameters.AddWithValue("@Template10", member.FingerprintTemplate10 ?? "");
@@ -245,6 +255,7 @@ namespace GymCheckIn.Services
                 Name = reader["Name"].ToString(),
                 Phone = reader["Phone"].ToString(),
                 Email = reader["Email"].ToString(),
+                MembershipPlan = reader["MembershipPlan"]?.ToString() ?? "",
                 MembershipExpiryDate = string.IsNullOrEmpty(reader["MembershipExpiryDate"].ToString()) 
                     ? (DateTime?)null 
                     : DateTime.Parse(reader["MembershipExpiryDate"].ToString()),

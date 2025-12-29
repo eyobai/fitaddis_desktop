@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Media;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace GymCheckIn
@@ -12,11 +14,20 @@ namespace GymCheckIn
         private ExcelHelper excelHelper;
         private List<Member> members = new List<Member>();
         private Member currentEnrollingMember;
-        private int enrollMode = 0; // 0 = CheckIn mode, 1 = Enroll mode
+        private int enrollMode = 0; // 0 = CheckIn mode, 1 = Enroll mode
         private bool testMode = false;
 
         private string sRegTemplate = "";
         private string sRegTemplate10 = "";
+
+        private string successSoundPath;
+        private string errorSoundPath;
+        private string warningSoundPath;
+
+        [DllImport("winmm.dll")]
+        private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
+        private const uint SND_FILENAME = 0x00020000;
+        private const uint SND_ASYNC = 0x0001;
 
         public MainForm()
         {
@@ -30,7 +41,15 @@ namespace GymCheckIn
             LoadMembersFromExcel();
             UpdateMembersList();
             dtpExpiry.Value = DateTime.Now.AddMonths(1);
-            UpdateStatus("Ready. Connect fingerprint sensor to start.");
+            
+            // Initialize sound paths from Windows
+            string winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            successSoundPath = Path.Combine(winDir, @"Media\chord.wav");
+            errorSoundPath = Path.Combine(winDir, @"Media\Windows Background.wav");
+            warningSoundPath = Path.Combine(winDir, @"Media\ding.wav");
+            
+            // Auto-connect to fingerprint sensor
+            ConnectToSensor(showErrors: false);
         }
 
         private void LoadMembersFromExcel()
@@ -50,6 +69,11 @@ namespace GymCheckIn
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
+        {
+            ConnectToSensor(showErrors: true);
+        }
+
+        private void ConnectToSensor(bool showErrors)
         {
             try
             {
@@ -79,18 +103,27 @@ namespace GymCheckIn
                     }
                     else
                     {
-                        MessageBox.Show("No fingerprint sensor detected!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (showErrors)
+                            MessageBox.Show("No fingerprint sensor detected!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        else
+                            UpdateStatus("No fingerprint sensor detected. Click Connect when ready.");
                         axZKFPEngX1.EndEngine();
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Failed to initialize fingerprint engine!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (showErrors)
+                        MessageBox.Show("Failed to initialize fingerprint engine!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    else
+                        UpdateStatus("Failed to initialize fingerprint engine. Click Connect to retry.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Connection error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (showErrors)
+                    MessageBox.Show($"Connection error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else
+                    UpdateStatus($"Connection error: {ex.Message}");
             }
         }
 
@@ -240,6 +273,7 @@ namespace GymCheckIn
                 lblMemberInfo.Text = "";
                 axZKFPEngX1.ControlSensor(12, 1);  // Red LED
                 axZKFPEngX1.ControlSensor(13, 1);  // Beep
+                PlaySound(warningSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);  // Warning sound
             }
             else
             {
@@ -265,6 +299,7 @@ namespace GymCheckIn
                 UpdateStatus($"Check-in DENIED: {member.Name} - Membership expired on {member.ExpiryDate:dd/MM/yyyy}");
                 axZKFPEngX1.ControlSensor(12, 1);  // Red LED
                 axZKFPEngX1.ControlSensor(13, 1);  // Beep
+                PlaySound(errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);  // Error sound
             }
             else
             {
@@ -276,6 +311,8 @@ namespace GymCheckIn
                 UpdateStatus($"Check-in OK: {member.Name} - {member.DaysRemaining} days remaining");
                 axZKFPEngX1.ControlSensor(11, 1);  // Green LED
                 axZKFPEngX1.ControlSensor(13, 1);  // Beep
+                MessageBox.Show($"Playing: {successSoundPath}");  // DEBUG
+                PlaySound(successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);  // Success sound
             }
         }
 

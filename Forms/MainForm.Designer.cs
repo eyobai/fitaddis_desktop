@@ -17,6 +17,14 @@ namespace GymCheckIn.Forms
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            
+            // System Tray
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.trayContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.trayMenuShow = new System.Windows.Forms.ToolStripMenuItem();
+            this.trayMenuExit = new System.Windows.Forms.ToolStripMenuItem();
+
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabCheckIn = new System.Windows.Forms.TabPage();
             this.tabEnrollment = new System.Windows.Forms.TabPage();
@@ -69,9 +77,9 @@ namespace GymCheckIn.Forms
             this.lblSyncStatus = new System.Windows.Forms.Label();
             this.btnForceSync = new System.Windows.Forms.Button();
 
-            // Log Panel
-            this.grpLog = new System.Windows.Forms.GroupBox();
-            this.txtLog = new System.Windows.Forms.TextBox();
+            // Log Panel (commented out)
+            // this.grpLog = new System.Windows.Forms.GroupBox();
+            // this.txtLog = new System.Windows.Forms.TextBox();
 
             // ZKTeco ActiveX Control
             this.axZKFPEngX1 = new AxZKFPEngXControl.AxZKFPEngX();
@@ -321,7 +329,8 @@ namespace GymCheckIn.Forms
             this.dgvMembers.AllowUserToDeleteRows = false;
             this.dgvMembers.ReadOnly = true;
             this.dgvMembers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvMembers.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvMembers.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dgvMembers.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 
             // 
             // lblMemberCount
@@ -466,25 +475,25 @@ namespace GymCheckIn.Forms
             this.btnForceSync.Click += new System.EventHandler(this.btnForceSync_Click);
 
             // 
-            // grpLog
+            // grpLog (commented out)
             // 
-            this.grpLog.Text = "  📋 Activity Log  ";
-            this.grpLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.grpLog.Height = 140;
-            this.grpLog.Controls.Add(this.txtLog);
+            // this.grpLog.Text = "  📋 Activity Log  ";
+            // this.grpLog.Dock = System.Windows.Forms.DockStyle.Bottom;
+            // this.grpLog.Height = 140;
+            // this.grpLog.Controls.Add(this.txtLog);
 
             // 
-            // txtLog
+            // txtLog (commented out)
             // 
-            this.txtLog.Multiline = true;
-            this.txtLog.ReadOnly = true;
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
-            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9F);
-            this.txtLog.Font = new System.Drawing.Font("Consolas", 9F);
-            this.txtLog.BackColor = System.Drawing.Color.White;
+            // this.txtLog.Multiline = true;
+            // this.txtLog.ReadOnly = true;
+            // this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            // this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            // this.txtLog.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
+            // this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            // this.txtLog.Font = new System.Drawing.Font("Consolas", 9F);
+            // this.txtLog.Font = new System.Drawing.Font("Consolas", 9F);
+            // this.txtLog.BackColor = System.Drawing.Color.White;
 
             // 
             // axZKFPEngX1
@@ -504,7 +513,7 @@ namespace GymCheckIn.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1100, 760);
             this.Controls.Add(this.tabControl);
-            this.Controls.Add(this.grpLog);
+            // this.Controls.Add(this.grpLog);
             this.Controls.Add(this.pnlStatus);
             this.Controls.Add(this.axZKFPEngX1);
             this.Font = new System.Drawing.Font("Segoe UI", 10F);
@@ -517,6 +526,36 @@ namespace GymCheckIn.Forms
             this.BackColor = System.Drawing.Color.FromArgb(248, 249, 250);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Resize += new System.EventHandler(this.MainForm_Resize);
+
+            // 
+            // notifyIcon
+            // 
+            this.notifyIcon.Text = "Fit Addis - Gym Check-In";
+            this.notifyIcon.Icon = System.Drawing.SystemIcons.Application;
+            this.notifyIcon.Visible = true;
+            this.notifyIcon.ContextMenuStrip = this.trayContextMenu;
+            this.notifyIcon.DoubleClick += new System.EventHandler(this.notifyIcon_DoubleClick);
+
+            // 
+            // trayContextMenu
+            // 
+            this.trayContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+                this.trayMenuShow,
+                this.trayMenuExit
+            });
+
+            // 
+            // trayMenuShow
+            // 
+            this.trayMenuShow.Text = "Show";
+            this.trayMenuShow.Click += new System.EventHandler(this.trayMenuShow_Click);
+
+            // 
+            // trayMenuExit
+            // 
+            this.trayMenuExit.Text = "Exit";
+            this.trayMenuExit.Click += new System.EventHandler(this.trayMenuExit_Click);
 
             ((System.ComponentModel.ISupportInitialize)(this.picFingerprint)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMembers)).EndInit();
@@ -569,8 +608,8 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.Label lblSyncStatus;
         private System.Windows.Forms.Button btnForceSync;
 
-        private System.Windows.Forms.GroupBox grpLog;
-        private System.Windows.Forms.TextBox txtLog;
+        // private System.Windows.Forms.GroupBox grpLog;
+        // private System.Windows.Forms.TextBox txtLog;
 
         private System.Windows.Forms.GroupBox grpManualCheckIn;
         private System.Windows.Forms.ComboBox cmbManualCheckInMembers;
@@ -578,5 +617,10 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.Button btnLoadMembers;
 
         private AxZKFPEngXControl.AxZKFPEngX axZKFPEngX1;
+
+        private System.Windows.Forms.NotifyIcon notifyIcon;
+        private System.Windows.Forms.ContextMenuStrip trayContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem trayMenuShow;
+        private System.Windows.Forms.ToolStripMenuItem trayMenuExit;
     }
 }

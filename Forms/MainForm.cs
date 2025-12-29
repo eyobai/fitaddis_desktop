@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GymCheckIn.Models;
@@ -29,6 +30,14 @@ namespace GymCheckIn.Forms
         private string _regTemplate = "";
         private string _regTemplate10 = "";
 
+        // Sound API
+        [DllImport("winmm.dll")]
+        private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);
+        private const uint SND_FILENAME = 0x00020000;
+        private const uint SND_ASYNC = 0x0001;
+        private string _successSoundPath;
+        private string _errorSoundPath;
+
         public MainForm(LoginResponse loginData)
         {
             _loginData = loginData;
@@ -41,6 +50,12 @@ namespace GymCheckIn.Forms
             InitializeServices();
             LoadLocalMembers();
             UpdateUI();
+            
+            // Initialize sound paths from app directory
+            string appDir = Application.StartupPath;
+            _successSoundPath = Path.Combine(appDir, @"Sounds\success.wav");
+            _errorSoundPath = Path.Combine(appDir, @"Sounds\error.wav");
+            Log($"Sound paths: {_successSoundPath} | Exists: {File.Exists(_successSoundPath)}");
             
             // Start sync service
             _syncService.Start();
@@ -68,7 +83,7 @@ namespace GymCheckIn.Forms
             ThemeManager.StyleGroupBox(grpSensor);
             ThemeManager.StyleGroupBox(grpFitAddis);
             ThemeManager.StyleGroupBox(grpEnrollment);
-            ThemeManager.StyleGroupBox(grpLog);
+            // ThemeManager.StyleGroupBox(grpLog);
             ThemeManager.StyleGroupBox(grpManualCheckIn);
             
             // Style manual check-in controls
@@ -101,7 +116,10 @@ namespace GymCheckIn.Forms
 
         private void InitializeServices()
         {
-            string dataFolder = Path.Combine(Application.StartupPath, "Data");
+            // Use AppData folder for data storage (doesn't require admin rights)
+            string dataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FitAddis", "Data");
             
             _db = new DatabaseService(dataFolder);
             
@@ -154,7 +172,8 @@ namespace GymCheckIn.Forms
                     : 0,
                 Expiry = m.MembershipExpiryDate?.ToString("dd/MM/yyyy") ?? "N/A",
                 Status = m.IsExpired ? "EXPIRED" : "ACTIVE",
-                Enrolled = m.IsEnrolled ? "Yes" : "No"
+                Enrolled = m.IsEnrolled ? "Yes" : "No",
+                Plan = m.MembershipPlan ?? ""
             }).ToList();
 
             lblMemberCount.Text = $"Members: {_localMembers.Count} | Enrolled: {_localMembers.Count(m => m.IsEnrolled)}";
@@ -381,6 +400,7 @@ namespace GymCheckIn.Forms
                 ShowCheckInResult("MEMBERSHIP EXPIRED",
                     $"{member.FullName}\nExpired: {member.MembershipExpiryDate:dd/MM/yyyy}", color);
                 Log($"Check-in DENIED: {member.FullName} - Membership expired");
+                PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
             {
@@ -389,6 +409,7 @@ namespace GymCheckIn.Forms
                 ShowCheckInResult("CHECK-IN SUCCESS",
                     $"{member.FullName}\n{(daysRemaining > 0 ? $"{daysRemaining} days remaining" : member.MembershipName)}", color);
                 Log($"Check-in OK: {member.FullName}");
+                PlaySound(_successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
 
             // Save check-in record locally
@@ -471,6 +492,7 @@ namespace GymCheckIn.Forms
             _enrollingMember.Name = fitAddisMember.FullName;
             _enrollingMember.Phone = fitAddisMember.PhoneNumber;
             _enrollingMember.Email = fitAddisMember.Email;
+            _enrollingMember.MembershipPlan = fitAddisMember.MembershipName;
             _enrollingMember.MembershipExpiryDate = fitAddisMember.MembershipExpiryDate;
 
             if (_enrollingMember.Id == 0)
@@ -570,6 +592,7 @@ namespace GymCheckIn.Forms
                 Log("Fingerprint not recognized.");
                 axZKFPEngX1.ControlSensor(12, 1); // Red LED
                 axZKFPEngX1.ControlSensor(13, 1); // Beep
+                PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
             {
@@ -619,6 +642,7 @@ namespace GymCheckIn.Forms
                     $"{member.Name}\nExpired: {member.MembershipExpiryDate:dd/MM/yyyy}", color);
                 Log($"Check-in DENIED: {member.Name} - Membership expired");
                 axZKFPEngX1.ControlSensor(12, 1); // Red LED
+                PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
             {
@@ -628,6 +652,7 @@ namespace GymCheckIn.Forms
                     $"{member.Name}\n{member.DaysRemaining} days remaining", color);
                 Log($"Check-in OK: {member.Name} - {member.DaysRemaining} days remaining");
                 axZKFPEngX1.ControlSensor(11, 1); // Green LED
+                PlaySound(_successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
 
             axZKFPEngX1.ControlSensor(13, 1); // Beep
@@ -800,18 +825,31 @@ namespace GymCheckIn.Forms
                 return;
             }
 
-            string logLine = $"[{DateTime.Now:HH:mm:ss}] {message}";
-            txtLog.AppendText(logLine + Environment.NewLine);
-            txtLog.SelectionStart = txtLog.TextLength;
-            txtLog.ScrollToCaret();
+            // Activity log commented out
+            // string logLine = $"[{DateTime.Now:HH:mm:ss}] {message}";
+            // txtLog.AppendText(logLine + Environment.NewLine);
+            // txtLog.SelectionStart = txtLog.TextLength;
+            // txtLog.ScrollToCaret();
         }
 
         #endregion
 
         #region Form Events
 
+        private bool _forceClose = false;
+
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (!_forceClose && e.CloseReason == CloseReason.UserClosing)
+            {
+                // Minimize to tray instead of closing
+                e.Cancel = true;
+                this.WindowState = FormWindowState.Minimized;
+                this.ShowInTaskbar = false;
+                notifyIcon.ShowBalloonTip(1000, "Fit Addis", "Application minimized to system tray. Double-click to restore.", ToolTipIcon.Info);
+                return;
+            }
+
             _syncService?.Stop();
             
             if (fpcHandle != 0)
@@ -820,7 +858,40 @@ namespace GymCheckIn.Forms
             }
             axZKFPEngX1.EndEngine();
 
+            notifyIcon.Visible = false;
+            notifyIcon.Dispose();
             _db?.Dispose();
+        }
+
+        private void MainForm_Resize(object sender, EventArgs e)
+        {
+            if (this.WindowState == FormWindowState.Minimized)
+            {
+                this.ShowInTaskbar = false;
+            }
+        }
+
+        private void notifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            RestoreFromTray();
+        }
+
+        private void trayMenuShow_Click(object sender, EventArgs e)
+        {
+            RestoreFromTray();
+        }
+
+        private void trayMenuExit_Click(object sender, EventArgs e)
+        {
+            _forceClose = true;
+            Application.Exit();
+        }
+
+        private void RestoreFromTray()
+        {
+            this.ShowInTaskbar = true;
+            this.WindowState = FormWindowState.Normal;
+            this.Activate();
         }
 
         private void btnDeleteMember_Click(object sender, EventArgs e)
