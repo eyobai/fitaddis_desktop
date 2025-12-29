@@ -14,7 +14,7 @@ namespace GymCheckIn.Forms
 {
     public partial class MainForm : Form
     {
-        private int fpcHandle = 0;
+        private ZKFingerService _fingerService;
         private DatabaseService _db;
         private FitAddisApiService _api;
         private SyncService _syncService;
@@ -25,10 +25,6 @@ namespace GymCheckIn.Forms
         private List<Member> _localMembers = new List<Member>();
         private List<FitAddisMember> _fitAddisMembers = new List<FitAddisMember>();
         private Member _enrollingMember;
-        private int _enrollMode = 0; // 0 = CheckIn mode, 1 = Enroll mode
-
-        private string _regTemplate = "";
-        private string _regTemplate10 = "";
 
         // Sound API
         [DllImport("winmm.dll")]
@@ -194,26 +190,41 @@ namespace GymCheckIn.Forms
         {
             try
             {
-                if (axZKFPEngX1.InitEngine() == 0)
-                {
-                    int sensorCount = axZKFPEngX1.SensorCount;
-                    if (sensorCount > 0)
-                    {
-                        axZKFPEngX1.SensorIndex = 0;
-                        fpcHandle = axZKFPEngX1.CreateFPCacheDBEx();
+                // Initialize the fingerprint service
+                _fingerService = new ZKFingerService();
+                _fingerService.OnLog += (s, msg) => { try { Log(msg); } catch { } };
+                _fingerService.OnFingerprintCaptured += FingerService_OnFingerprintCaptured;
+                _fingerService.OnEnrollmentComplete += FingerService_OnEnrollmentComplete;
 
+                int initResult = _fingerService.Initialize();
+                if (initResult != 0)
+                {
+                    MessageBox.Show($"Failed to initialize fingerprint SDK. Error: {initResult}", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                int deviceCount = _fingerService.GetDeviceCount();
+                Log($"Found {deviceCount} fingerprint device(s)");
+
+                if (deviceCount > 0)
+                {
+                    int openResult = _fingerService.OpenDevice(0);
+                    if (openResult == 0)
+                    {
                         // Load enrolled fingerprints into cache
                         var enrolledMembers = _db.GetEnrolledMembers();
                         foreach (var member in enrolledMembers)
                         {
-                            if (member.FingerprintId.HasValue)
+                            if (member.FingerprintId.HasValue && !string.IsNullOrEmpty(member.FingerprintTemplate))
                             {
-                                axZKFPEngX1.AddRegTemplateStrToFPCacheDBEx(fpcHandle, 
-                                    member.FingerprintId.Value,
-                                    member.FingerprintTemplate, 
-                                    member.FingerprintTemplate10);
+                                byte[] template = ZKFingerService.Base64ToTemplate(member.FingerprintTemplate);
+                                _fingerService.AddTemplateToDb(member.FingerprintId.Value, template);
                             }
                         }
+
+                        // Start capturing
+                        _fingerService.StartCapture();
 
                         btnConnect.Enabled = false;
                         btnDisconnect.Enabled = true;
@@ -224,21 +235,22 @@ namespace GymCheckIn.Forms
                     }
                     else
                     {
-                        MessageBox.Show("No fingerprint sensor detected!", "Error", 
+                        MessageBox.Show($"Failed to open device. Error: {openResult}", "Error",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        axZKFPEngX1.EndEngine();
+                        _fingerService.Terminate();
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Failed to initialize fingerprint engine!", "Error", 
+                    MessageBox.Show("No fingerprint sensor detected!", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    _fingerService.Terminate();
                 }
             }
             catch (Exception ex)
             {
                 Log($"Connection error: {ex.Message}");
-                MessageBox.Show($"Connection error: {ex.Message}", "Error", 
+                MessageBox.Show($"Connection error: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -247,12 +259,11 @@ namespace GymCheckIn.Forms
         {
             try
             {
-                if (fpcHandle != 0)
+                if (_fingerService != null)
                 {
-                    axZKFPEngX1.FreeFPCacheDB(fpcHandle);
-                    fpcHandle = 0;
+                    _fingerService.Dispose();
+                    _fingerService = null;
                 }
-                axZKFPEngX1.EndEngine();
 
                 btnConnect.Enabled = true;
                 btnDisconnect.Enabled = false;
@@ -288,15 +299,7 @@ namespace GymCheckIn.Forms
 
                 if (_fitAddisMembers.Count > 0)
                 {
-                    cmbFitAddisMembers.DataSource = null;
-                    cmbFitAddisMembers.DisplayMember = "Display";
-                    cmbFitAddisMembers.ValueMember = "CheckInCode";
-                    cmbFitAddisMembers.DataSource = _fitAddisMembers.Select(m => new
-                    {
-                        m.CheckInCode,
-                        Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName})"
-                    }).ToList();
-
+                    FilterEnrollmentMembers("");
                     Log($"Loaded {_fitAddisMembers.Count} members from Fit Addis");
                     grpEnrollment.Enabled = true;
                 }
@@ -315,8 +318,35 @@ namespace GymCheckIn.Forms
             finally
             {
                 btnFetchMembers.Enabled = true;
-                btnFetchMembers.Text = "Fetch Members from Fit Addis";
+                btnFetchMembers.Text = "🔄  Refresh Members List";
             }
+        }
+
+        private void txtSearchEnrollment_TextChanged(object sender, EventArgs e)
+        {
+            FilterEnrollmentMembers(txtSearchEnrollment.Text);
+        }
+
+        private void FilterEnrollmentMembers(string searchText)
+        {
+            if (_fitAddisMembers == null || _fitAddisMembers.Count == 0) return;
+
+            var filtered = string.IsNullOrWhiteSpace(searchText)
+                ? _fitAddisMembers
+                : _fitAddisMembers.Where(m =>
+                    m.FullName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    m.CheckInCode.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (m.PhoneNumber != null && m.PhoneNumber.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+
+            cmbFitAddisMembers.DataSource = null;
+            cmbFitAddisMembers.DisplayMember = "Display";
+            cmbFitAddisMembers.ValueMember = "CheckInCode";
+            cmbFitAddisMembers.DataSource = filtered.Select(m => new
+            {
+                m.CheckInCode,
+                Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName})"
+            }).ToList();
         }
 
         #endregion
@@ -334,15 +364,7 @@ namespace GymCheckIn.Forms
 
                 if (_fitAddisMembers.Count > 0)
                 {
-                    cmbManualCheckInMembers.DataSource = null;
-                    cmbManualCheckInMembers.DisplayMember = "Display";
-                    cmbManualCheckInMembers.ValueMember = "CheckInCode";
-                    cmbManualCheckInMembers.DataSource = _fitAddisMembers.Select(m => new
-                    {
-                        m.CheckInCode,
-                        Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName})"
-                    }).ToList();
-
+                    FilterManualCheckInMembers("");
                     Log($"Loaded {_fitAddisMembers.Count} members for manual check-in");
                 }
                 else
@@ -360,8 +382,35 @@ namespace GymCheckIn.Forms
             finally
             {
                 btnLoadMembers.Enabled = true;
-                btnLoadMembers.Text = "Load Members";
+                btnLoadMembers.Text = "🔄 Load Members";
             }
+        }
+
+        private void txtSearchManualCheckIn_TextChanged(object sender, EventArgs e)
+        {
+            FilterManualCheckInMembers(txtSearchManualCheckIn.Text);
+        }
+
+        private void FilterManualCheckInMembers(string searchText)
+        {
+            if (_fitAddisMembers == null || _fitAddisMembers.Count == 0) return;
+
+            var filtered = string.IsNullOrWhiteSpace(searchText)
+                ? _fitAddisMembers
+                : _fitAddisMembers.Where(m =>
+                    m.FullName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    m.CheckInCode.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (m.PhoneNumber != null && m.PhoneNumber.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+
+            cmbManualCheckInMembers.DataSource = null;
+            cmbManualCheckInMembers.DisplayMember = "Display";
+            cmbManualCheckInMembers.ValueMember = "CheckInCode";
+            cmbManualCheckInMembers.DataSource = filtered.Select(m => new
+            {
+                m.CheckInCode,
+                Display = $"{m.FullName} - {m.CheckInCode}"
+            }).ToList();
         }
 
         private async void btnManualCheckIn_Click(object sender, EventArgs e)
@@ -455,6 +504,13 @@ namespace GymCheckIn.Forms
 
         private void btnEnrollFingerprint_Click(object sender, EventArgs e)
         {
+            if (_fingerService == null || !_fingerService.IsConnected)
+            {
+                MessageBox.Show("Please connect the fingerprint sensor first.", "Validation",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (cmbFitAddisMembers.SelectedItem == null)
             {
                 MessageBox.Show("Please select a member to enroll.", "Validation",
@@ -501,97 +557,85 @@ namespace GymCheckIn.Forms
                 _enrollingMember.FingerprintId = _db.GetNextFingerprintId();
             }
 
-            // Start enrollment
-            _enrollMode = 1;
-            _regTemplate = "";
-            _regTemplate10 = "";
+            // Start enrollment with new SDK
+            _fingerService.BeginEnroll();
 
-            if (axZKFPEngX1.IsRegister)
-                axZKFPEngX1.CancelEnroll();
-
-            axZKFPEngX1.EnrollCount = 3;
-            axZKFPEngX1.BeginEnroll();
-
-            lblEnrollStatus.Text = "Scan finger 1 of 3...";
+            lblEnrollStatus.Text = "Scan finger 1 of 3... (Place finger on sensor)";
             lblEnrollStatus.ForeColor = Color.Blue;
             Log($"Enrolling {_enrollingMember.Name}. Please scan finger 3 times.");
         }
 
-        private void axZKFPEngX1_OnEnroll(object sender, AxZKFPEngXControl.IZKFPEngXEvents_OnEnrollEvent e)
+        private void FingerService_OnEnrollmentComplete(object sender, EnrollmentCompleteEventArgs e)
         {
-            if (!e.actionResult)
+            if (InvokeRequired)
             {
-                Log("Enrollment failed.");
-                lblEnrollStatus.Text = "Enrollment Failed";
-                lblEnrollStatus.ForeColor = Color.Red;
-                _enrollMode = 0;
-                _enrollingMember = null;
+                Invoke(new Action(() => FingerService_OnEnrollmentComplete(sender, e)));
                 return;
             }
 
-            if (_enrollMode == 1 && _enrollingMember != null)
+            if (e.Success && _enrollingMember != null)
             {
-                _regTemplate = axZKFPEngX1.GetTemplateAsStringEx("9");
-                _regTemplate10 = axZKFPEngX1.GetTemplateAsStringEx("10");
+                // Save template as Base64 string
+                _enrollingMember.FingerprintTemplate = ZKFingerService.TemplateToBase64(e.Template);
+                _enrollingMember.FingerprintTemplate10 = _enrollingMember.FingerprintTemplate; // Same template for new SDK
 
-                if (!string.IsNullOrEmpty(_regTemplate) && !string.IsNullOrEmpty(_regTemplate10))
-                {
-                    _enrollingMember.FingerprintTemplate = _regTemplate;
-                    _enrollingMember.FingerprintTemplate10 = _regTemplate10;
+                // Save to database
+                _db.SaveMember(_enrollingMember);
 
-                    // Save to database
-                    _db.SaveMember(_enrollingMember);
+                // Add to fingerprint cache
+                _fingerService.AddTemplateToDb(_enrollingMember.FingerprintId.Value, e.Template);
 
-                    // Add to fingerprint cache
-                    axZKFPEngX1.AddRegTemplateStrToFPCacheDBEx(fpcHandle,
-                        _enrollingMember.FingerprintId.Value,
-                        _regTemplate, _regTemplate10);
+                // Refresh local list
+                LoadLocalMembers();
 
-                    // Refresh local list
-                    LoadLocalMembers();
-
-                    lblEnrollStatus.Text = "Enrollment Successful!";
-                    lblEnrollStatus.ForeColor = Color.Green;
-                    Log($"Member '{_enrollingMember.Name}' enrolled successfully. Fingerprint ID: {_enrollingMember.FingerprintId}");
-
-                    // LED and beep feedback
-                    axZKFPEngX1.ControlSensor(11, 1); // Green LED
-                    axZKFPEngX1.ControlSensor(13, 1); // Beep
-                }
-                else
-                {
-                    lblEnrollStatus.Text = "Failed to capture template";
-                    lblEnrollStatus.ForeColor = Color.Red;
-                    Log("Failed to capture fingerprint template.");
-                }
-
-                _enrollMode = 0;
-                _enrollingMember = null;
+                lblEnrollStatus.Text = "Enrollment Successful!";
+                lblEnrollStatus.ForeColor = Color.Green;
+                Log($"Member '{_enrollingMember.Name}' enrolled successfully. Fingerprint ID: {_enrollingMember.FingerprintId}");
+                PlaySound(_successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
+            else
+            {
+                lblEnrollStatus.Text = $"Enrollment Failed: {e.ErrorMessage}";
+                lblEnrollStatus.ForeColor = Color.Red;
+                Log($"Enrollment failed: {e.ErrorMessage}");
+                PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
+            }
+
+            _enrollingMember = null;
         }
 
-        private void axZKFPEngX1_OnCapture(object sender, AxZKFPEngXControl.IZKFPEngXEvents_OnCaptureEvent e)
+        private void FingerService_OnFingerprintCaptured(object sender, FingerprintCapturedEventArgs e)
         {
-            if (_enrollMode == 1)
+            if (InvokeRequired)
             {
-                int remaining = axZKFPEngX1.EnrollIndex;
-                lblEnrollStatus.Text = $"Scan finger {4 - remaining} of 3...";
+                Invoke(new Action(() => FingerService_OnFingerprintCaptured(sender, e)));
                 return;
+            }
+
+            // Update enrollment progress if enrolling
+            if (_fingerService.IsEnrolling)
+            {
+                int progress = _fingerService.GetEnrollProgress();
+                lblEnrollStatus.Text = $"Scan finger {progress + 1} of 3...";
+                Log($"Enrollment scan {progress + 1} of 3 captured");
+                return;
+            }
+
+            // Update fingerprint image
+            if (e.Image != null)
+            {
+                picFingerprint.Image = e.Image;
             }
 
             // Check-in mode - 1:N fingerprint identification
-            if (fpcHandle == 0) return;
-
+            int fingerprintId = 0;
             int score = 0;
-            int processedNum = 1;
-            int fingerprintId = axZKFPEngX1.IdentificationInFPCacheDB(fpcHandle, e.aTemplate, ref score, ref processedNum);
+            int result = _fingerService.Identify(e.Template, out fingerprintId, out score);
 
-            if (fingerprintId == -1)
+            if (result != 0 || fingerprintId <= 0)
             {
                 ShowCheckInResult("NOT RECOGNIZED", "Fingerprint not registered", Color.Orange);
                 Log("Fingerprint not recognized.");
-                axZKFPEngX1.ControlSensor(12, 1); // Red LED
-                axZKFPEngX1.ControlSensor(13, 1); // Beep
                 PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
@@ -606,22 +650,6 @@ namespace GymCheckIn.Forms
                     ShowCheckInResult("ERROR", "Member not found in database", Color.Red);
                     Log($"Fingerprint ID {fingerprintId} found but member not in database.");
                 }
-            }
-        }
-
-        private void axZKFPEngX1_OnImageReceived(object sender, AxZKFPEngXControl.IZKFPEngXEvents_OnImageReceivedEvent e)
-        {
-            if (e.aImageValid)
-            {
-                try
-                {
-                    Bitmap bmp = new Bitmap(axZKFPEngX1.ImageWidth, axZKFPEngX1.ImageHeight);
-                    Graphics g = Graphics.FromImage(bmp);
-                    axZKFPEngX1.PrintImageAt(g.GetHdc().ToInt32(), 0, 0, bmp.Width, bmp.Height);
-                    g.ReleaseHdc();
-                    picFingerprint.Image = bmp;
-                }
-                catch { }
             }
         }
 
@@ -641,7 +669,6 @@ namespace GymCheckIn.Forms
                 ShowCheckInResult("MEMBERSHIP EXPIRED", 
                     $"{member.Name}\nExpired: {member.MembershipExpiryDate:dd/MM/yyyy}", color);
                 Log($"Check-in DENIED: {member.Name} - Membership expired");
-                axZKFPEngX1.ControlSensor(12, 1); // Red LED
                 PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
@@ -651,11 +678,8 @@ namespace GymCheckIn.Forms
                 ShowCheckInResult("CHECK-IN SUCCESS",
                     $"{member.Name}\n{member.DaysRemaining} days remaining", color);
                 Log($"Check-in OK: {member.Name} - {member.DaysRemaining} days remaining");
-                axZKFPEngX1.ControlSensor(11, 1); // Green LED
                 PlaySound(_successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
-
-            axZKFPEngX1.ControlSensor(13, 1); // Beep
 
             // Save check-in record locally
             var checkIn = new CheckInRecord
@@ -852,11 +876,8 @@ namespace GymCheckIn.Forms
 
             _syncService?.Stop();
             
-            if (fpcHandle != 0)
-            {
-                axZKFPEngX1.FreeFPCacheDB(fpcHandle);
-            }
-            axZKFPEngX1.EndEngine();
+            // Cleanup fingerprint service
+            _fingerService?.Dispose();
 
             notifyIcon.Visible = false;
             notifyIcon.Dispose();
@@ -938,9 +959,9 @@ namespace GymCheckIn.Forms
             if (result == DialogResult.Yes)
             {
                 // Remove from fingerprint cache
-                if (fpcHandle != 0 && member.FingerprintId.HasValue)
+                if (_fingerService != null && member.FingerprintId.HasValue)
                 {
-                    axZKFPEngX1.RemoveRegTemplateFromFPCacheDB(fpcHandle, member.FingerprintId.Value);
+                    _fingerService.RemoveTemplateFromDb(member.FingerprintId.Value);
                 }
 
                 _db.DeleteMember(member.Id);

@@ -83,7 +83,11 @@ namespace GymCheckIn
                     if (sensorCount > 0)
                     {
                         axZKFPEngX1.SensorIndex = 0;
+                        axZKFPEngX1.FPEngineVersion = "10";  // Required for fingerprint capture
                         fpcHandle = axZKFPEngX1.CreateFPCacheDBEx();
+                        
+                        // Start capturing fingerprints from the sensor
+                        axZKFPEngX1.BeginCapture();
                         
                         // Load existing fingerprints into cache
                         foreach (var member in members)
@@ -131,6 +135,9 @@ namespace GymCheckIn
         {
             try
             {
+                // Stop capturing fingerprints
+                axZKFPEngX1.CancelCapture();
+                
                 if (fpcHandle != 0)
                 {
                     axZKFPEngX1.FreeFPCacheDB(fpcHandle);

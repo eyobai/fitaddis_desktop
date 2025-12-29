@@ -45,6 +45,7 @@ namespace GymCheckIn.Forms
             // Enrollment Tab Controls
             this.grpFitAddis = new System.Windows.Forms.GroupBox();
             this.btnFetchMembers = new System.Windows.Forms.Button();
+            this.txtSearchEnrollment = new System.Windows.Forms.TextBox();
             this.cmbFitAddisMembers = new System.Windows.Forms.ComboBox();
             this.lblMemberListInfo = new System.Windows.Forms.Label();
             this.grpEnrollment = new System.Windows.Forms.GroupBox();
@@ -68,6 +69,8 @@ namespace GymCheckIn.Forms
 
             // Manual Check-In Controls
             this.grpManualCheckIn = new System.Windows.Forms.GroupBox();
+            this.lblSearchManual = new System.Windows.Forms.Label();
+            this.txtSearchManualCheckIn = new System.Windows.Forms.TextBox();
             this.cmbManualCheckInMembers = new System.Windows.Forms.ComboBox();
             this.btnManualCheckIn = new System.Windows.Forms.Button();
             this.btnLoadMembers = new System.Windows.Forms.Button();
@@ -83,13 +86,9 @@ namespace GymCheckIn.Forms
             // this.grpLog = new System.Windows.Forms.GroupBox();
             // this.txtLog = new System.Windows.Forms.TextBox();
 
-            // ZKTeco ActiveX Control
-            this.axZKFPEngX1 = new AxZKFPEngXControl.AxZKFPEngX();
-
             ((System.ComponentModel.ISupportInitialize)(this.picFingerprint)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMembers)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvLogs)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.axZKFPEngX1)).BeginInit();
             this.SuspendLayout();
 
             // 
@@ -199,9 +198,11 @@ namespace GymCheckIn.Forms
             // 
             this.grpManualCheckIn.Text = "  Manual Check-In  ";
             this.grpManualCheckIn.Location = new System.Drawing.Point(755, 20);
-            this.grpManualCheckIn.Size = new System.Drawing.Size(222, 180);
+            this.grpManualCheckIn.Size = new System.Drawing.Size(222, 210);
             this.grpManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.grpManualCheckIn.Controls.Add(this.btnLoadMembers);
+            this.grpManualCheckIn.Controls.Add(this.lblSearchManual);
+            this.grpManualCheckIn.Controls.Add(this.txtSearchManualCheckIn);
             this.grpManualCheckIn.Controls.Add(this.cmbManualCheckInMembers);
             this.grpManualCheckIn.Controls.Add(this.btnManualCheckIn);
 
@@ -215,10 +216,26 @@ namespace GymCheckIn.Forms
             this.btnLoadMembers.Click += new System.EventHandler(this.btnLoadMembers_Click);
 
             // 
+            // lblSearchManual
+            // 
+            this.lblSearchManual.Text = "Search:";
+            this.lblSearchManual.Location = new System.Drawing.Point(15, 75);
+            this.lblSearchManual.Size = new System.Drawing.Size(50, 20);
+            this.lblSearchManual.Font = new System.Drawing.Font("Segoe UI", 9F);
+
+            // 
+            // txtSearchManualCheckIn
+            // 
+            this.txtSearchManualCheckIn.Location = new System.Drawing.Point(65, 72);
+            this.txtSearchManualCheckIn.Size = new System.Drawing.Size(140, 28);
+            this.txtSearchManualCheckIn.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtSearchManualCheckIn.TextChanged += new System.EventHandler(this.txtSearchManualCheckIn_TextChanged);
+
+            // 
             // cmbManualCheckInMembers
             // 
             this.cmbManualCheckInMembers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbManualCheckInMembers.Location = new System.Drawing.Point(15, 75);
+            this.cmbManualCheckInMembers.Location = new System.Drawing.Point(15, 110);
             this.cmbManualCheckInMembers.Size = new System.Drawing.Size(190, 30);
             this.cmbManualCheckInMembers.Font = new System.Drawing.Font("Segoe UI", 9F);
 
@@ -226,7 +243,7 @@ namespace GymCheckIn.Forms
             // btnManualCheckIn
             // 
             this.btnManualCheckIn.Text = "✓ Check In";
-            this.btnManualCheckIn.Location = new System.Drawing.Point(15, 120);
+            this.btnManualCheckIn.Location = new System.Drawing.Point(15, 150);
             this.btnManualCheckIn.Size = new System.Drawing.Size(190, 45);
             this.btnManualCheckIn.BackColor = System.Drawing.Color.FromArgb(39, 174, 96);
             this.btnManualCheckIn.ForeColor = System.Drawing.Color.White;
@@ -249,6 +266,7 @@ namespace GymCheckIn.Forms
             this.grpFitAddis.Location = new System.Drawing.Point(20, 20);
             this.grpFitAddis.Size = new System.Drawing.Size(520, 150);
             this.grpFitAddis.Controls.Add(this.btnFetchMembers);
+            this.grpFitAddis.Controls.Add(this.txtSearchEnrollment);
             this.grpFitAddis.Controls.Add(this.cmbFitAddisMembers);
             this.grpFitAddis.Controls.Add(this.lblMemberListInfo);
 
@@ -264,17 +282,25 @@ namespace GymCheckIn.Forms
             // 
             // lblMemberListInfo
             // 
-            this.lblMemberListInfo.Text = "Select member to enroll:";
+            this.lblMemberListInfo.Text = "Search and select member:";
             this.lblMemberListInfo.Location = new System.Drawing.Point(20, 80);
             this.lblMemberListInfo.Size = new System.Drawing.Size(200, 25);
             this.lblMemberListInfo.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.lblMemberListInfo.ForeColor = System.Drawing.Color.FromArgb(108, 117, 125);
 
             // 
+            // txtSearchEnrollment
+            // 
+            this.txtSearchEnrollment.Location = new System.Drawing.Point(230, 77);
+            this.txtSearchEnrollment.Size = new System.Drawing.Size(270, 28);
+            this.txtSearchEnrollment.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtSearchEnrollment.TextChanged += new System.EventHandler(this.txtSearchEnrollment_TextChanged);
+
+            // 
             // cmbFitAddisMembers
             // 
             this.cmbFitAddisMembers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbFitAddisMembers.Location = new System.Drawing.Point(20, 105);
+            this.cmbFitAddisMembers.Location = new System.Drawing.Point(20, 110);
             this.cmbFitAddisMembers.Size = new System.Drawing.Size(480, 35);
             this.cmbFitAddisMembers.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.cmbFitAddisMembers.ItemHeight = 20;
@@ -512,17 +538,6 @@ namespace GymCheckIn.Forms
             // this.txtLog.BackColor = System.Drawing.Color.White;
 
             // 
-            // axZKFPEngX1
-            // 
-            this.axZKFPEngX1.Enabled = true;
-            this.axZKFPEngX1.Location = new System.Drawing.Point(800, 300);
-            this.axZKFPEngX1.Size = new System.Drawing.Size(100, 50);
-            this.axZKFPEngX1.Visible = false;
-            this.axZKFPEngX1.OnCapture += new AxZKFPEngXControl.IZKFPEngXEvents_OnCaptureEventHandler(this.axZKFPEngX1_OnCapture);
-            this.axZKFPEngX1.OnEnroll += new AxZKFPEngXControl.IZKFPEngXEvents_OnEnrollEventHandler(this.axZKFPEngX1_OnEnroll);
-            this.axZKFPEngX1.OnImageReceived += new AxZKFPEngXControl.IZKFPEngXEvents_OnImageReceivedEventHandler(this.axZKFPEngX1_OnImageReceived);
-
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -531,7 +546,6 @@ namespace GymCheckIn.Forms
             this.Controls.Add(this.tabControl);
             // this.Controls.Add(this.grpLog);
             this.Controls.Add(this.pnlStatus);
-            this.Controls.Add(this.axZKFPEngX1);
             this.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
             this.MaximizeBox = true;
@@ -583,7 +597,6 @@ namespace GymCheckIn.Forms
             ((System.ComponentModel.ISupportInitialize)(this.picFingerprint)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMembers)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvLogs)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.axZKFPEngX1)).EndInit();
             this.ResumeLayout(false);
         }
 
@@ -607,6 +620,7 @@ namespace GymCheckIn.Forms
 
         private System.Windows.Forms.GroupBox grpFitAddis;
         private System.Windows.Forms.Button btnFetchMembers;
+        private System.Windows.Forms.TextBox txtSearchEnrollment;
         private System.Windows.Forms.ComboBox cmbFitAddisMembers;
         private System.Windows.Forms.Label lblMemberListInfo;
 
@@ -636,11 +650,11 @@ namespace GymCheckIn.Forms
         // private System.Windows.Forms.TextBox txtLog;
 
         private System.Windows.Forms.GroupBox grpManualCheckIn;
+        private System.Windows.Forms.Label lblSearchManual;
+        private System.Windows.Forms.TextBox txtSearchManualCheckIn;
         private System.Windows.Forms.ComboBox cmbManualCheckInMembers;
         private System.Windows.Forms.Button btnManualCheckIn;
         private System.Windows.Forms.Button btnLoadMembers;
-
-        private AxZKFPEngXControl.AxZKFPEngX axZKFPEngX1;
 
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.ContextMenuStrip trayContextMenu;
