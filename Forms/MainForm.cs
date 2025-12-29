@@ -887,6 +887,28 @@ namespace GymCheckIn.Forms
             Application.Exit();
         }
 
+        public bool LogoutRequested { get; private set; } = false;
+
+        private void btnLogout_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show("Are you sure you want to logout?", "Confirm Logout",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            
+            if (result == DialogResult.Yes)
+            {
+                // Clear saved credentials
+                string credPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "FitAddis", "credentials.json");
+                if (File.Exists(credPath))
+                    File.Delete(credPath);
+                
+                LogoutRequested = true;
+                _forceClose = true;
+                this.Close();
+            }
+        }
+
         private void RestoreFromTray()
         {
             this.ShowInTaskbar = true;

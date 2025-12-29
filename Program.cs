@@ -14,11 +14,24 @@ namespace GymCheckIn
 
             try
             {
-                using (var loginForm = new LoginForm())
+                bool continueRunning = true;
+                
+                while (continueRunning)
                 {
-                    if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoginResult != null)
+                    using (var loginForm = new LoginForm())
                     {
-                        Application.Run(new MainForm(loginForm.LoginResult));
+                        if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoginResult != null)
+                        {
+                            var mainForm = new MainForm(loginForm.LoginResult);
+                            Application.Run(mainForm);
+                            
+                            // Check if user requested logout
+                            continueRunning = mainForm.LogoutRequested;
+                        }
+                        else
+                        {
+                            continueRunning = false;
+                        }
                     }
                 }
             }

@@ -23,6 +23,7 @@ namespace GymCheckIn.Forms
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.trayContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.trayMenuShow = new System.Windows.Forms.ToolStripMenuItem();
+            this.trayMenuLogout = new System.Windows.Forms.ToolStripMenuItem();
             this.trayMenuExit = new System.Windows.Forms.ToolStripMenuItem();
 
             this.tabControl = new System.Windows.Forms.TabControl();
@@ -76,6 +77,7 @@ namespace GymCheckIn.Forms
             this.lblConnectionStatus = new System.Windows.Forms.Label();
             this.lblSyncStatus = new System.Windows.Forms.Label();
             this.btnForceSync = new System.Windows.Forms.Button();
+            this.btnLogout = new System.Windows.Forms.Button();
 
             // Log Panel (commented out)
             // this.grpLog = new System.Windows.Forms.GroupBox();
@@ -447,6 +449,7 @@ namespace GymCheckIn.Forms
             this.pnlStatus.Controls.Add(this.lblConnectionStatus);
             this.pnlStatus.Controls.Add(this.lblSyncStatus);
             this.pnlStatus.Controls.Add(this.btnForceSync);
+            this.pnlStatus.Controls.Add(this.btnLogout);
 
             // 
             // lblConnectionStatus
@@ -473,6 +476,19 @@ namespace GymCheckIn.Forms
             this.btnForceSync.Location = new System.Drawing.Point(480, 8);
             this.btnForceSync.Size = new System.Drawing.Size(130, 35);
             this.btnForceSync.Click += new System.EventHandler(this.btnForceSync_Click);
+
+            // 
+            // btnLogout
+            // 
+            this.btnLogout.Text = "Logout";
+            this.btnLogout.Location = new System.Drawing.Point(630, 8);
+            this.btnLogout.Size = new System.Drawing.Size(100, 35);
+            this.btnLogout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLogout.BackColor = System.Drawing.Color.FromArgb(231, 76, 60);
+            this.btnLogout.ForeColor = System.Drawing.Color.White;
+            this.btnLogout.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnLogout.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
 
             // 
             // grpLog (commented out)
@@ -542,6 +558,7 @@ namespace GymCheckIn.Forms
             // 
             this.trayContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.trayMenuShow,
+                this.trayMenuLogout,
                 this.trayMenuExit
             });
 
@@ -550,6 +567,12 @@ namespace GymCheckIn.Forms
             // 
             this.trayMenuShow.Text = "Show";
             this.trayMenuShow.Click += new System.EventHandler(this.trayMenuShow_Click);
+
+            // 
+            // trayMenuLogout
+            // 
+            this.trayMenuLogout.Text = "Logout";
+            this.trayMenuLogout.Click += new System.EventHandler(this.btnLogout_Click);
 
             // 
             // trayMenuExit
@@ -607,6 +630,7 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.Label lblConnectionStatus;
         private System.Windows.Forms.Label lblSyncStatus;
         private System.Windows.Forms.Button btnForceSync;
+        private System.Windows.Forms.Button btnLogout;
 
         // private System.Windows.Forms.GroupBox grpLog;
         // private System.Windows.Forms.TextBox txtLog;
@@ -621,6 +645,7 @@ namespace GymCheckIn.Forms
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.ContextMenuStrip trayContextMenu;
         private System.Windows.Forms.ToolStripMenuItem trayMenuShow;
+        private System.Windows.Forms.ToolStripMenuItem trayMenuLogout;
         private System.Windows.Forms.ToolStripMenuItem trayMenuExit;
     }
 }
