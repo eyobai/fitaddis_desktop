@@ -195,6 +195,7 @@ namespace GymCheckIn.Forms
                 _fingerService.OnLog += (s, msg) => { try { Log(msg); } catch { } };
                 _fingerService.OnFingerprintCaptured += FingerService_OnFingerprintCaptured;
                 _fingerService.OnEnrollmentComplete += FingerService_OnEnrollmentComplete;
+                _fingerService.OnEnrollmentProgress += FingerService_OnEnrollmentProgress;
 
                 int initResult = _fingerService.Initialize();
                 if (initResult != 0)
@@ -602,6 +603,27 @@ namespace GymCheckIn.Forms
             }
 
             _enrollingMember = null;
+        }
+
+        private void FingerService_OnEnrollmentProgress(object sender, EnrollmentProgressEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => FingerService_OnEnrollmentProgress(sender, e)));
+                return;
+            }
+
+            // Update UI to show enrollment progress
+            if (e.CurrentScan < e.TotalScans)
+            {
+                lblEnrollStatus.Text = $"Scan {e.CurrentScan} captured! Now scan finger {e.CurrentScan + 1} of {e.TotalScans}...";
+            }
+            else
+            {
+                lblEnrollStatus.Text = $"All {e.TotalScans} scans captured! Processing...";
+            }
+            lblEnrollStatus.ForeColor = Color.Green;
+            Log($"Enrollment progress: {e.CurrentScan} of {e.TotalScans} scans captured");
         }
 
         private void FingerService_OnFingerprintCaptured(object sender, FingerprintCapturedEventArgs e)

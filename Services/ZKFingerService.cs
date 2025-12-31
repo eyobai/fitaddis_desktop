@@ -22,6 +22,7 @@ namespace GymCheckIn.Services
         // Events
         public event EventHandler<FingerprintCapturedEventArgs> OnFingerprintCaptured;
         public event EventHandler<EnrollmentCompleteEventArgs> OnEnrollmentComplete;
+        public event EventHandler<EnrollmentProgressEventArgs> OnEnrollmentProgress;
         public event EventHandler<string> OnLog;
 
         // Enrollment state
@@ -283,6 +284,13 @@ namespace GymCheckIn.Services
 
             Log($"Enrollment capture {_enrollCount} of 3 complete");
 
+            // Raise progress event to update UI
+            OnEnrollmentProgress?.Invoke(this, new EnrollmentProgressEventArgs
+            {
+                CurrentScan = _enrollCount,
+                TotalScans = 3
+            });
+
             if (_enrollCount >= 3)
             {
                 // Merge templates
@@ -447,5 +455,11 @@ namespace GymCheckIn.Services
         public bool Success { get; set; }
         public byte[] Template { get; set; }
         public string ErrorMessage { get; set; }
+    }
+
+    public class EnrollmentProgressEventArgs : EventArgs
+    {
+        public int CurrentScan { get; set; }
+        public int TotalScans { get; set; }
     }
 }
