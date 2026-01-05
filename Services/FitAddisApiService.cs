@@ -87,7 +87,7 @@ namespace GymCheckIn.Services
             {
                 using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
                 {
-                    string url = "http://localhost:3000/login-fitness-center";
+                    string url = "https://fitaddis-app-53y6g.ondigitalocean.app/login-fitness-center";
                     var request = new LoginRequest
                     {
                         PhoneNumber = phoneNumber,

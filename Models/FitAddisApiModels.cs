@@ -90,7 +90,7 @@ namespace GymCheckIn.Models
 
     public class ApiSettings
     {
-        public string BaseUrl { get; set; } = "http://localhost:3000";
+        public string BaseUrl { get; set; } = "https://fitaddis-app-53y6g.ondigitalocean.app";
         public string FitnessCenterId { get; set; } = "1";
         public string ApiKey { get; set; } = "";
         public string DeviceId { get; set; } = Environment.MachineName;

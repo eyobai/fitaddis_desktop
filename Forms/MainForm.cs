@@ -122,7 +122,7 @@ namespace GymCheckIn.Forms
             // Use login data for API settings
             _apiSettings = new ApiSettings
             {
-                BaseUrl = "http://localhost:3000",
+                BaseUrl = "https://fitaddis-app-53y6g.ondigitalocean.app",
                 FitnessCenterId = _loginData.FitnessCenter.Id.ToString(),
                 ApiKey = _loginData.Token,
                 DeviceId = _db.GetSetting("DeviceId", Environment.MachineName),
