@@ -194,6 +194,33 @@ namespace GymCheckIn.Services
             }
         }
 
+        public void UpdateMemberFromApi(string memberCode, string name, string phone, string email, string membershipPlan, DateTime? expiryDate)
+        {
+            using (var conn = new SQLiteConnection(_connectionString))
+            {
+                conn.Open();
+                string sql = @"
+                    UPDATE Members SET 
+                        Name = @Name,
+                        Phone = @Phone,
+                        Email = @Email,
+                        MembershipPlan = @Plan,
+                        MembershipExpiryDate = @Expiry
+                    WHERE FitAddisMemberCode = @Code";
+
+                using (var cmd = new SQLiteCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Name", name ?? "");
+                    cmd.Parameters.AddWithValue("@Phone", phone ?? "");
+                    cmd.Parameters.AddWithValue("@Email", email ?? "");
+                    cmd.Parameters.AddWithValue("@Plan", membershipPlan ?? "");
+                    cmd.Parameters.AddWithValue("@Expiry", expiryDate?.ToString("o") ?? "");
+                    cmd.Parameters.AddWithValue("@Code", memberCode);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public void UpdateMemberFingerprint(string memberCode, string template, string template10, int fingerprintId)
         {
             using (var conn = new SQLiteConnection(_connectionString))

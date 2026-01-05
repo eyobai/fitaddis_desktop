@@ -9,11 +9,8 @@ namespace GymCheckIn.Models
         [JsonProperty("member_id")]
         public int MemberId { get; set; }
 
-        [JsonProperty("first_name")]
-        public string FirstName { get; set; }
-
-        [JsonProperty("last_name")]
-        public string LastName { get; set; }
+        [JsonProperty("full_name")]
+        public string FullName { get; set; }
 
         [JsonProperty("phone_number")]
         public string PhoneNumber { get; set; }
@@ -39,8 +36,6 @@ namespace GymCheckIn.Models
         [JsonProperty("last_check_in_time")]
         public DateTime? LastCheckInTime { get; set; }
 
-        public string FullName => $"{FirstName} {LastName}".Trim();
-        
         public string MemberCode => CheckInCode;
     }
 
@@ -95,7 +90,7 @@ namespace GymCheckIn.Models
 
     public class ApiSettings
     {
-        public string BaseUrl { get; set; } = "https://fitaddis-app-53y6g.ondigitalocean.app";
+        public string BaseUrl { get; set; } = "http://localhost:3000";
         public string FitnessCenterId { get; set; } = "1";
         public string ApiKey { get; set; } = "";
         public string DeviceId { get; set; } = Environment.MachineName;

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GymCheckIn.Models;
@@ -17,6 +18,7 @@ namespace GymCheckIn.Services
         public event EventHandler<SyncEventArgs> OnSyncStatusChanged;
         public event EventHandler<string> OnLog;
         public event EventHandler<bool> OnConnectionStatusChanged;
+        public event EventHandler OnMembersUpdated;
 
         public bool IsOnline => _isOnline;
         public bool IsSyncing => _isSyncing;
@@ -59,6 +61,9 @@ namespace GymCheckIn.Services
                 }
 
                 if (!_isOnline) return;
+
+                // Sync member data from API (updates expiry dates, etc.)
+                await SyncMembersFromApiAsync();
 
                 int unsyncedCount = _db.GetUnsyncedCount();
                 if (unsyncedCount == 0) return;
@@ -112,6 +117,45 @@ namespace GymCheckIn.Services
 
             Log("Manual sync triggered");
             await CheckAndSyncAsync();
+        }
+
+        private async Task SyncMembersFromApiAsync()
+        {
+            try
+            {
+                var apiMembers = await _api.GetMembersAsync();
+                if (apiMembers == null || apiMembers.Count == 0) return;
+
+                var localMembers = _db.GetAllMembers();
+                int updated = 0;
+
+                foreach (var localMember in localMembers)
+                {
+                    var apiMember = apiMembers.FirstOrDefault(m => m.CheckInCode == localMember.FitAddisMemberCode);
+                    if (apiMember != null)
+                    {
+                        _db.UpdateMemberFromApi(
+                            localMember.FitAddisMemberCode,
+                            apiMember.FullName,
+                            apiMember.PhoneNumber,
+                            apiMember.Email,
+                            apiMember.MembershipName,
+                            apiMember.MembershipExpiryDate
+                        );
+                        updated++;
+                    }
+                }
+
+                if (updated > 0)
+                {
+                    Log($"Synced {updated} members from API");
+                    OnMembersUpdated?.Invoke(this, EventArgs.Empty);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Member sync error: {ex.Message}");
+            }
         }
 
         private void Log(string message)

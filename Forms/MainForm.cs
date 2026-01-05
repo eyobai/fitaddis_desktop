@@ -122,7 +122,7 @@ namespace GymCheckIn.Forms
             // Use login data for API settings
             _apiSettings = new ApiSettings
             {
-                BaseUrl = "https://fitaddis-app-53y6g.ondigitalocean.app",
+                BaseUrl = "http://localhost:3000",
                 FitnessCenterId = _loginData.FitnessCenter.Id.ToString(),
                 ApiKey = _loginData.Token,
                 DeviceId = _db.GetSetting("DeviceId", Environment.MachineName),
@@ -141,6 +141,7 @@ namespace GymCheckIn.Forms
             _syncService.OnLog += (s, msg) => Log(msg);
             _syncService.OnSyncStatusChanged += SyncService_OnSyncStatusChanged;
             _syncService.OnConnectionStatusChanged += SyncService_OnConnectionStatusChanged;
+            _syncService.OnMembersUpdated += SyncService_OnMembersUpdated;
 
             _exportService = new ExcelExportService();
             
@@ -152,6 +153,35 @@ namespace GymCheckIn.Forms
         {
             _localMembers = _db.GetAllMembers();
             RefreshMembersGrid();
+        }
+
+        private void SyncLocalMembersWithApi()
+        {
+            if (_fitAddisMembers == null || _fitAddisMembers.Count == 0) return;
+
+            int updated = 0;
+            foreach (var localMember in _localMembers)
+            {
+                var apiMember = _fitAddisMembers.FirstOrDefault(m => m.CheckInCode == localMember.FitAddisMemberCode);
+                if (apiMember != null)
+                {
+                    _db.UpdateMemberFromApi(
+                        localMember.FitAddisMemberCode,
+                        apiMember.FullName,
+                        apiMember.PhoneNumber,
+                        apiMember.Email,
+                        apiMember.MembershipName,
+                        apiMember.MembershipExpiryDate
+                    );
+                    updated++;
+                }
+            }
+
+            if (updated > 0)
+            {
+                Log($"Synced {updated} local members with API data");
+                LoadLocalMembers(); // Refresh local data
+            }
         }
 
         private void RefreshMembersGrid()
@@ -300,6 +330,9 @@ namespace GymCheckIn.Forms
 
                 if (_fitAddisMembers.Count > 0)
                 {
+                    // Sync local members with API data (update expiry dates, etc.)
+                    SyncLocalMembersWithApi();
+                    
                     FilterEnrollmentMembers("");
                     Log($"Loaded {_fitAddisMembers.Count} members from Fit Addis");
                     grpEnrollment.Enabled = true;
@@ -773,6 +806,17 @@ namespace GymCheckIn.Forms
 
             lblConnectionStatus.Text = isOnline ? "ONLINE" : "OFFLINE";
             lblConnectionStatus.ForeColor = isOnline ? Color.Green : Color.Red;
+        }
+
+        private void SyncService_OnMembersUpdated(object sender, EventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => SyncService_OnMembersUpdated(sender, e)));
+                return;
+            }
+
+            LoadLocalMembers();
         }
 
         private async void btnForceSync_Click(object sender, EventArgs e)
