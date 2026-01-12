@@ -140,7 +140,8 @@ namespace GymCheckIn.Services
                             apiMember.PhoneNumber,
                             apiMember.Email,
                             apiMember.MembershipName,
-                            apiMember.MembershipExpiryDate
+                            apiMember.MembershipExpiryDate,
+                            apiMember.MembershipStatus
                         );
                         updated++;
                     }

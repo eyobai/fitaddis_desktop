@@ -77,6 +77,14 @@ namespace GymCheckIn.Services
                         cmd.ExecuteNonQuery();
                 }
                 catch { /* Column already exists */ }
+
+                // Migration: Add MembershipStatus column if it doesn't exist
+                try
+                {
+                    using (var cmd = new SQLiteCommand("ALTER TABLE Members ADD COLUMN MembershipStatus TEXT", conn))
+                        cmd.ExecuteNonQuery();
+                }
+                catch { /* Column already exists */ }
             }
         }
 
@@ -194,7 +202,7 @@ namespace GymCheckIn.Services
             }
         }
 
-        public void UpdateMemberFromApi(string memberCode, string name, string phone, string email, string membershipPlan, DateTime? expiryDate)
+        public void UpdateMemberFromApi(string memberCode, string name, string phone, string email, string membershipPlan, DateTime? expiryDate, string membershipStatus = null)
         {
             using (var conn = new SQLiteConnection(_connectionString))
             {
@@ -205,7 +213,8 @@ namespace GymCheckIn.Services
                         Phone = @Phone,
                         Email = @Email,
                         MembershipPlan = @Plan,
-                        MembershipExpiryDate = @Expiry
+                        MembershipExpiryDate = @Expiry,
+                        MembershipStatus = @Status
                     WHERE FitAddisMemberCode = @Code";
 
                 using (var cmd = new SQLiteCommand(sql, conn))
@@ -215,6 +224,7 @@ namespace GymCheckIn.Services
                     cmd.Parameters.AddWithValue("@Email", email ?? "");
                     cmd.Parameters.AddWithValue("@Plan", membershipPlan ?? "");
                     cmd.Parameters.AddWithValue("@Expiry", expiryDate?.ToString("o") ?? "");
+                    cmd.Parameters.AddWithValue("@Status", membershipStatus ?? "");
                     cmd.Parameters.AddWithValue("@Code", memberCode);
                     cmd.ExecuteNonQuery();
                 }
@@ -286,6 +296,7 @@ namespace GymCheckIn.Services
                 MembershipExpiryDate = string.IsNullOrEmpty(reader["MembershipExpiryDate"].ToString()) 
                     ? (DateTime?)null 
                     : DateTime.Parse(reader["MembershipExpiryDate"].ToString()),
+                MembershipStatus = GetColumnValue(reader, "MembershipStatus"),
                 FingerprintTemplate = reader["FingerprintTemplate"].ToString(),
                 FingerprintTemplate10 = reader["FingerprintTemplate10"].ToString(),
                 FingerprintId = reader["FingerprintId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["FingerprintId"]),
@@ -293,6 +304,19 @@ namespace GymCheckIn.Services
                     ? DateTime.Now 
                     : DateTime.Parse(reader["EnrolledDate"].ToString())
             };
+        }
+
+        private string GetColumnValue(SQLiteDataReader reader, string columnName)
+        {
+            try
+            {
+                int ordinal = reader.GetOrdinal(columnName);
+                return reader.IsDBNull(ordinal) ? "" : reader.GetString(ordinal);
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         #endregion

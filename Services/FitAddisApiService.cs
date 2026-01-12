@@ -131,7 +131,7 @@ namespace GymCheckIn.Services
             }
         }
 
-        public async Task<List<FitAddisMember>> GetMembersAsync()
+        public async Task<List<FitAddisMember>> GetMembersAsync(string expiryStatus = null)
         {
             var allMembers = new List<FitAddisMember>();
             int currentPage = 1;
@@ -144,6 +144,13 @@ namespace GymCheckIn.Services
                 while (currentPage <= maxPages)
                 {
                     string url = $"{_settings.BaseUrl}/fitness-center/{_settings.FitnessCenterId}/members?page={currentPage}";
+                    
+                    // Add expiryStatus filter if specified (valid values: active, expired, expiring_soon)
+                    if (!string.IsNullOrEmpty(expiryStatus))
+                    {
+                        url += $"&expiryStatus={expiryStatus}";
+                    }
+                    
                     Log($"Fetching page {currentPage}...");
                     
                     var response = await _httpClient.GetAsync(url);

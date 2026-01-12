@@ -171,7 +171,8 @@ namespace GymCheckIn.Forms
                         apiMember.PhoneNumber,
                         apiMember.Email,
                         apiMember.MembershipName,
-                        apiMember.MembershipExpiryDate
+                        apiMember.MembershipExpiryDate,
+                        apiMember.MembershipStatus
                     );
                     updated++;
                 }
@@ -193,11 +194,9 @@ namespace GymCheckIn.Forms
                 MemberCode = m.FitAddisMemberCode,
                 m.Name,
                 m.Phone,
-                DaysToExpire = m.MembershipExpiryDate.HasValue 
-                    ? (int)(m.MembershipExpiryDate.Value - DateTime.Now).TotalDays 
-                    : 0,
+                DaysToExpire = m.DaysRemaining,
                 Expiry = m.MembershipExpiryDate?.ToString("dd/MM/yyyy") ?? "N/A",
-                Status = m.IsExpired ? "EXPIRED" : "ACTIVE",
+                Status = GetStatusBadge(m.MembershipStatus),
                 Enrolled = m.IsEnrolled ? "Yes" : "No",
                 Plan = m.MembershipPlan ?? ""
             }).ToList();
@@ -379,7 +378,7 @@ namespace GymCheckIn.Forms
             cmbFitAddisMembers.DataSource = filtered.Select(m => new
             {
                 m.CheckInCode,
-                Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName})"
+                Display = $"{m.FullName} - {m.CheckInCode} ({m.MembershipName}) [{GetStatusBadge(m.MembershipStatus)}]"
             }).ToList();
         }
 
@@ -443,7 +442,7 @@ namespace GymCheckIn.Forms
             cmbManualCheckInMembers.DataSource = filtered.Select(m => new
             {
                 m.CheckInCode,
-                Display = $"{m.FullName} - {m.CheckInCode}"
+                Display = $"{m.FullName} - {m.CheckInCode} [{GetStatusBadge(m.MembershipStatus)}]"
             }).ToList();
         }
 
@@ -467,16 +466,16 @@ namespace GymCheckIn.Forms
                 return;
             }
 
-            // Check membership expiry
-            bool isExpired = member.MembershipExpiryDate.HasValue && member.MembershipExpiryDate.Value < DateTime.Now;
+            // Use membership_status from API as single source of truth
             int daysRemaining = member.MembershipExpiryDate.HasValue
-                ? (int)(member.MembershipExpiryDate.Value - DateTime.Now).TotalDays
+                ? (int)(member.MembershipExpiryDate.Value.Date - DateTime.Now.Date).TotalDays
                 : 0;
 
             string status;
             Color color;
 
-            if (isExpired)
+            // Check membership status from API
+            if (member.IsExpired)
             {
                 status = "EXPIRED";
                 color = Color.Red;
@@ -484,6 +483,24 @@ namespace GymCheckIn.Forms
                     $"{member.FullName}\nExpired: {member.MembershipExpiryDate:dd/MM/yyyy}", color);
                 Log($"Check-in DENIED: {member.FullName} - Membership expired");
                 PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
+            }
+            else if (member.IsNeverPaid)
+            {
+                status = "NEVER_PAID";
+                color = Color.FromArgb(255, 152, 0); // Orange
+                ShowCheckInResult("NO PAYMENT HISTORY",
+                    $"{member.FullName}\nNo payment recorded", color);
+                Log($"Check-in WARNING: {member.FullName} - Never paid");
+                PlaySound(_errorSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
+            }
+            else if (member.IsExpiringSoon)
+            {
+                status = "OK";
+                color = Color.FromArgb(255, 193, 7); // Amber/Yellow
+                ShowCheckInResult("CHECK-IN SUCCESS",
+                    $"{member.FullName}\n⚠️ {daysRemaining} days remaining", color);
+                Log($"Check-in OK: {member.FullName} - Expiring soon ({daysRemaining} days)");
+                PlaySound(_successSoundPath, IntPtr.Zero, SND_FILENAME | SND_ASYNC);
             }
             else
             {
@@ -824,6 +841,26 @@ namespace GymCheckIn.Forms
             btnForceSync.Enabled = false;
             await _syncService.ForceSyncAsync();
             btnForceSync.Enabled = true;
+        }
+
+        /// <summary>
+        /// Gets a display badge text for membership status
+        /// </summary>
+        private string GetStatusBadge(string membershipStatus)
+        {
+            switch (membershipStatus?.ToLower())
+            {
+                case "active":
+                    return "✓ Active";
+                case "expiring_soon":
+                    return "⚠ Expiring Soon";
+                case "expired":
+                    return "✗ Expired";
+                case "never_paid":
+                    return "○ Never Paid";
+                default:
+                    return membershipStatus ?? "Unknown";
+            }
         }
 
         #endregion

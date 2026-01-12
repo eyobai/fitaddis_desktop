@@ -13,9 +13,9 @@ namespace GymCheckIn
         public DateTime ExpiryDate { get; set; }
         public DateTime? LastCheckIn { get; set; }
 
-        public bool IsExpired => DateTime.Now > ExpiryDate;
+        public bool IsExpired => ExpiryDate.Date < DateTime.Now.Date;
         
-        public int DaysRemaining => IsExpired ? 0 : (ExpiryDate - DateTime.Now).Days;
+        public int DaysRemaining => IsExpired ? 0 : (int)(ExpiryDate.Date - DateTime.Now.Date).TotalDays;
 
         public Member()
         {

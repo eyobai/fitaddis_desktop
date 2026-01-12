@@ -36,7 +36,16 @@ namespace GymCheckIn.Models
         [JsonProperty("last_check_in_time")]
         public DateTime? LastCheckInTime { get; set; }
 
+        [JsonProperty("membership_status")]
+        public string MembershipStatus { get; set; }
+
         public string MemberCode => CheckInCode;
+
+        // Status helper properties based on membership_status field
+        public bool IsNeverPaid => MembershipStatus == "never_paid";
+        public bool IsActive => MembershipStatus == "active";
+        public bool IsExpiringSoon => MembershipStatus == "expiring_soon";
+        public bool IsExpired => MembershipStatus == "expired";
     }
 
     public class FitAddisMembersResponse
@@ -116,6 +125,61 @@ namespace GymCheckIn.Models
 
         [JsonProperty("token")]
         public string Token { get; set; }
+    }
+
+    public class MemberRegistrationRequest
+    {
+        [JsonProperty("fitnessCenterId")]
+        public int FitnessCenterId { get; set; }
+
+        [JsonProperty("memberTypeId")]
+        public int MemberTypeId { get; set; }
+
+        [JsonProperty("fullName")]
+        public string FullName { get; set; }
+
+        [JsonProperty("gender")]
+        public string Gender { get; set; }
+
+        [JsonProperty("phoneNumber")]
+        public string PhoneNumber { get; set; }
+
+        [JsonProperty("membershipPlanId")]
+        public int MembershipPlanId { get; set; }
+
+        [JsonProperty("referralSourceId")]
+        public int? ReferralSourceId { get; set; }
+
+        [JsonProperty("joinDate")]
+        public string JoinDate { get; set; }
+
+        [JsonProperty("email")]
+        public string Email { get; set; }
+
+        [JsonProperty("dateOfBirth")]
+        public string DateOfBirth { get; set; }
+
+        [JsonProperty("city")]
+        public string City { get; set; }
+
+        [JsonProperty("specificLocation")]
+        public string SpecificLocation { get; set; }
+
+        // Payment fields for registration with payment
+        [JsonProperty("isPaid")]
+        public bool IsPaid { get; set; }
+
+        [JsonProperty("paymentMethod")]
+        public string PaymentMethod { get; set; }  // "cash" or "bank_transfer"
+
+        [JsonProperty("bankAccountId")]
+        public int? BankAccountId { get; set; }
+
+        [JsonProperty("discountAmount")]
+        public decimal DiscountAmount { get; set; }
+
+        [JsonProperty("discountReason")]
+        public string DiscountReason { get; set; }
     }
 
     public class FitnessCenterInfo
